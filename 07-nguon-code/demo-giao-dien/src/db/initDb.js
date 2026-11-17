@@ -45,8 +45,8 @@ if (userCount === 0) {
   insertProject.run(
     'da-dacs-01',
     'Hệ thống quản lý công việc và tiến độ đồ án nhóm',
-    'co_so',
-    'Đồ án cơ sở - Ngành Công nghệ thông tin',
+    'mon_hoc',
+    'Môn: Công nghệ phần mềm',
     'Hệ thống web hỗ trợ sinh viên và giảng viên theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.',
     65.0,
     'dang_thuc_hien',
@@ -55,7 +55,7 @@ if (userCount === 0) {
 
   // 3. NHOM
   db.prepare(`INSERT INTO nhom (ma_nhom, ma_do_an, ten_nhom) VALUES (?, ?, ?)`).run(
-    'nhom-01', 'da-dacs-01', 'Nhóm Đồ án Cơ sở 05'
+    'nhom-01', 'da-dacs-01', 'Nhóm Đồ án Môn học 05'
   );
 
   // 4. THANH_VIEN_NHOM

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useProject } from './context/ProjectContext.jsx';
+import { CHIBI_ASSETS } from './constants/chibiAssets.js';
 import BannerRoleBar from './components/BannerRoleBar.jsx';
 import Sidebar from './components/Sidebar.jsx';
 import Header from './components/Header.jsx';
@@ -13,12 +14,19 @@ import TaskDrawer from './components/TaskDrawer.jsx';
 import TaskModal from './components/TaskModal.jsx';
 
 export default function App() {
-  const { activeTab, setActiveTab, loading, error } = useProject();
+  const { activeTab, setActiveTab, loading, error, chibiMode } = useProject();
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--ground)', color: 'var(--text-muted)' }}>
-        Đang khởi động không gian làm việc đồ án (SQLite)...
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--ground)', color: 'var(--text-muted)', gap: '14px' }}>
+        <img
+          src={CHIBI_ASSETS.loading.orbit}
+          alt="Đang tải dữ liệu"
+          style={{ width: '64px', height: '64px', animation: 'chibi-spin 2s linear infinite' }}
+        />
+        <div style={{ fontSize: '13.5px', fontWeight: 500, color: 'var(--text)' }}>
+          Đang khởi động không gian làm việc đồ án (SQLite)...
+        </div>
       </div>
     );
   }
@@ -26,6 +34,11 @@ export default function App() {
   if (error) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--ground)', color: '#b91c1c', gap: '12px' }}>
+        <img
+          src={CHIBI_ASSETS.stickers[5].src}
+          alt="Lỗi máy chủ"
+          style={{ width: '64px', height: '64px' }}
+        />
         <h3>Lỗi kết nối máy chủ SQLite</h3>
         <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>{error}</p>
         <button className="btn btn-outline" onClick={() => window.location.reload()}>
@@ -36,7 +49,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <div className={`app-root-container ${chibiMode ? 'chibi-active' : 'chibi-inactive'}`}>
       <BannerRoleBar />
 
       <div className="workspace-wrapper">
@@ -60,6 +73,6 @@ export default function App() {
 
       <TaskDrawer />
       <TaskModal />
-    </>
+    </div>
   );
 }

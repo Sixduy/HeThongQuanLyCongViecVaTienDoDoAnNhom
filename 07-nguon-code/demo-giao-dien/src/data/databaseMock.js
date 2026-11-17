@@ -40,8 +40,8 @@ export const mockDatabase = {
     {
       ma_do_an: "da-dacs-01",
       ten_do_an: "Hệ thống quản lý công việc và tiến độ đồ án nhóm",
-      loai_do_an: "co_so",
-      ten_mon_hoc: "Đồ án cơ sở - Ngành Công nghệ thông tin",
+      loai_do_an: "mon_hoc",
+      ten_mon_hoc: "Môn: Công nghệ phần mềm",
       noi_dung_muc_tieu: "Xây dựng hệ thống web hỗ trợ nhóm sinh viên và giảng viên hướng dẫn theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.",
       tien_do_tong: 65.00,
       trang_thai: "dang_thuc_hien",
@@ -55,7 +55,7 @@ export const mockDatabase = {
     {
       ma_nhom: "nhom-01",
       ma_do_an: "da-dacs-01",
-      ten_nhom: "Nhóm Đồ án Cơ sở 05"
+      ten_nhom: "Nhóm Đồ án Môn học 05"
     }
   ],
 

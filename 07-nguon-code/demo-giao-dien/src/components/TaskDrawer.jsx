@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext.jsx';
 import { apiService } from '../services/apiService.js';
 import { formatDate, formatFileSize } from '../utils/formatters.js';
+import { CHIBI_ASSETS, renderCommentWithStickers } from '../constants/chibiAssets.js';
 
 export default function TaskDrawer() {
   const {
@@ -15,7 +16,8 @@ export default function TaskDrawer() {
     canCreateTask,
     canLockTask,
     canEditTaskProgress,
-    reload
+    reload,
+    chibiMode
   } = useProject();
 
   const [title, setTitle] = useState('');
@@ -112,6 +114,28 @@ export default function TaskDrawer() {
     }
   };
 
+  const handleSendSticker = async (stickerCode) => {
+    try {
+      await apiService.addComment(selectedTask.ma_cong_viec, {
+        userId: currentUserId,
+        noi_dung: stickerCode
+      });
+      const updated = await apiService.getComments(selectedTask.ma_cong_viec);
+      setComments(updated);
+    } catch (err) {
+      alert(`Lỗi gửi sticker phản hồi: ${err.message}`);
+    }
+  };
+
+  const handleQuickProgress = (val) => {
+    setProgress(val);
+    if (val === 100) {
+      setStatus('hoan_thanh');
+    } else if (val > 0 && status === 'can_lam') {
+      setStatus('dang_lam');
+    }
+  };
+
   const handleAddAttachment = async () => {
     const fileName = prompt('Nhập tên tệp tài liệu / báo cáo muốn nộp đính kèm:', 'Bao-cao-tuan-hoan-chinh.pdf');
     if (!fileName) return;
@@ -167,7 +191,7 @@ export default function TaskDrawer() {
 
           {/* Form Fields */}
           <div className="drawer-field">
-            <label>Tiêu đề công việc (tieu_de)</label>
+            <label>Tiêu đề công việc</label>
             <input
               type="text"
               className="drawer-input"
@@ -179,7 +203,7 @@ export default function TaskDrawer() {
           </div>
 
           <div className="drawer-field">
-            <label>Mốc tiến độ trực thuộc (ma_moc &rarr; moc_tien_do)</label>
+            <label>Mốc tiến độ trực thuộc</label>
             <select
               className="drawer-select"
               id="drawer-select-milestone"
@@ -193,7 +217,7 @@ export default function TaskDrawer() {
           </div>
 
           <div className="drawer-field">
-            <label>Người thực hiện (ma_nguoi_thuc_hien &rarr; nguoi_dung)</label>
+            <label>Người thực hiện</label>
             <select
               className="drawer-select"
               id="drawer-select-assignee"
@@ -211,7 +235,7 @@ export default function TaskDrawer() {
           </div>
 
           <div className="drawer-field">
-            <label>Hạn chót hoàn thành (han_chot)</label>
+            <label>Hạn chót hoàn thành</label>
             <input
               type="date"
               className="drawer-input"
@@ -222,22 +246,22 @@ export default function TaskDrawer() {
           </div>
 
           <div className="drawer-field">
-            <label>Trạng thái (trang_thai: can_lam, dang_lam, hoan_thanh, tre_han)</label>
+            <label>Trạng thái công việc</label>
             <select
               className="drawer-select"
               id="drawer-select-status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
             >
-              <option value="can_lam">Cần làm (can_lam)</option>
-              <option value="dang_lam">Đang làm (dang_lam)</option>
-              <option value="hoan_thanh">Hoàn thành (hoan_thanh)</option>
-              <option value="tre_han">Trễ hạn (tre_han)</option>
+              <option value="can_lam">Cần làm</option>
+              <option value="dang_lam">Đang làm</option>
+              <option value="hoan_thanh">Hoàn thành</option>
+              <option value="tre_han">Trễ hạn</option>
             </select>
           </div>
 
           <div className="drawer-field">
-            <label>Nội dung mô tả (noi_dung_mo_ta)</label>
+            <label>Nội dung mô tả</label>
             <textarea
               className="drawer-textarea"
               id="drawer-textarea-desc"
@@ -247,14 +271,50 @@ export default function TaskDrawer() {
             ></textarea>
           </div>
 
-          {/* Progress Slider */}
-          <div className="progress-slider-wrapper">
-            <div className="slider-header">
-              <span>Tiến độ thực tế (phan_tram_tien_do)</span>
-              <span className="slider-val num-tabular" id="drawer-slider-val">
-                {isLocked ? `${progress}% (Đã khóa)` : (!canEditProgress ? `${progress}% (Chỉ người làm mới được sửa)` : `${progress}%`)}
+          {/* Progress Slider & Tự Chấm Tiến Độ Cá Nhân */}
+          <div className="progress-slider-wrapper" style={{ background: '#f8fafc', padding: '14px', borderRadius: 'var(--radius-lg)', border: '1px solid var(--border)' }}>
+            <div className="slider-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontWeight: 600, fontSize: '13px' }}>Tự chấm tiến độ cá nhân:</span>
+                {chibiMode && (
+                  <span style={{ fontSize: '11px', color: '#16a34a', fontWeight: 600 }}>
+                    {progress === 100 ? '🎉 Hoàn tất!' : (progress >= 50 ? '⚡ Đang tiến triển' : '💪 Cố lên')}
+                  </span>
+                )}
+              </div>
+              <span className="slider-val num-tabular" id="drawer-slider-val" style={{ fontWeight: 700, fontSize: '15px', color: progress === 100 ? '#15803d' : '#1d4ed8' }}>
+                {isLocked ? `${progress}% (🔒 Đã khóa)` : `${progress}%`}
               </span>
             </div>
+
+            {/* Quick Self-Rate Pills */}
+            {!isLocked && canEditProgress && (
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                {[0, 25, 50, 75, 100].map(val => (
+                  <button
+                    key={val}
+                    type="button"
+                    className={`btn-quick-rate-pill ${progress === val ? 'active' : ''}`}
+                    onClick={() => handleQuickProgress(val)}
+                    style={{
+                      flex: 1,
+                      padding: '8px 0',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      borderRadius: 'var(--radius-md)',
+                      border: progress === val ? '2px solid #1d4ed8' : '1px solid var(--border)',
+                      background: progress === val ? '#eff6ff' : '#ffffff',
+                      color: progress === val ? '#1d4ed8' : 'var(--text)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {val}%
+                  </button>
+                ))}
+              </div>
+            )}
+
             <input
               type="range"
               className="slider-control"
@@ -265,12 +325,36 @@ export default function TaskDrawer() {
               value={progress}
               disabled={!canEditProgress || isLocked}
               onChange={(e) => setProgress(Number(e.target.value))}
+              style={{ width: '100%', accentColor: progress === 100 ? '#15803d' : '#1d4ed8' }}
             />
-            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+              <span>0% (Cần làm)</span>
+              <span>50% (Đang làm)</span>
+              <span>100% (Hoàn thành)</span>
             </div>
+
+            {/* Mascot động viên khi tự chấm */}
+            {chibiMode && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', padding: '10px 14px', background: '#ffffff', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)' }}>
+                <img
+                  src={
+                    progress === 100 ? CHIBI_ASSETS.characters.success :
+                    (progress >= 75 ? CHIBI_ASSETS.characters.deadline :
+                    (progress >= 50 ? CHIBI_ASSETS.characters.coding :
+                    (progress > 0 ? CHIBI_ASSETS.characters.coLen : CHIBI_ASSETS.characters.emptyWait)))
+                  }
+                  alt="Mascot"
+                  style={{ width: '48px', height: '48px', objectFit: 'contain', flexShrink: 0 }}
+                />
+                <div style={{ fontSize: '12.5px', color: 'var(--text)', lineHeight: '1.4' }}>
+                  {progress === 100 && '🎉 Đã đạt 100%! Đề xuất chuyển trạng thái Hoàn thành để chốt khóa.'}
+                  {progress >= 75 && progress < 100 && '🚀 Đang chạy nước rút! Sắp hoàn thành rồi.'}
+                  {progress >= 50 && progress < 75 && '💻 Đang làm rất tốt, tiếp tục phát huy nhé!'}
+                  {progress > 0 && progress < 50 && '🌱 Đã khởi động công việc, cố lên nào!'}
+                  {progress === 0 && '📌 Công việc chưa bắt đầu, hãy tự chấm % khi có tiến triển nhé.'}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Lock Action Button */}
@@ -298,22 +382,119 @@ export default function TaskDrawer() {
           </button>
 
           {/* Comments Section */}
-          <h4 className="drawer-section-title">Thảo luận & Bình luận (binh_luan)</h4>
+          <h4 className="drawer-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span>Thảo luận & Bình luận</span>
+            {chibiMode && <span style={{ fontSize: '11px', color: '#16a34a' }}>&bull; Có Sticker Chibi</span>}
+          </h4>
           <div className="comments-list" id="drawer-comments-list">
             {comments.length === 0 ? (
               <div style={{ color: 'var(--text-muted)', fontSize: '11.5px' }}>Chưa có bình luận nào.</div>
             ) : (
-              comments.map(c => (
-                <div key={c.ma_binh_luan || c.thoi_gian_tao} className="comment-card">
-                  <div className="comment-header">
-                    <span className="comment-author">{c.ten_tac_gia || 'Thành viên'}</span>
-                    <span className="comment-time">{formatDate(c.thoi_gian_tao)}</span>
+              comments.map(c => {
+                const parts = renderCommentWithStickers(c.noi_dung);
+                return (
+                  <div key={c.ma_binh_luan || c.thoi_gian_tao} className="comment-card">
+                    <div className="comment-header">
+                      <span className="comment-author">{c.ten_tac_gia || 'Thành viên'}</span>
+                      <span className="comment-time">{formatDate(c.thoi_gian_tao)}</span>
+                    </div>
+                    <div className="comment-body-content">
+                      {parts.map((p, pIdx) => {
+                        if (p.type === 'sticker') {
+                          return (
+                            <div key={pIdx} style={{ margin: '6px 0' }}>
+                              <img
+                                src={p.sticker.src}
+                                alt={p.sticker.name}
+                                title={p.sticker.name}
+                                style={{ width: '64px', height: '64px', objectFit: 'contain' }}
+                              />
+                            </div>
+                          );
+                        }
+                        return <span key={pIdx}>{p.content}</span>;
+                      })}
+                    </div>
                   </div>
-                  <div>{c.noi_dung}</div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
+
+          {/* Sticker Reaction Picker Strip - Redesigned to be Big, Clear & Fun */}
+          {chibiMode && (
+            <div
+              className="sticker-picker-container"
+              style={{
+                background: '#f8fafc',
+                border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-lg)',
+                padding: '12px 14px',
+                marginBottom: '12px'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text)' }}>
+                  Gửi nhanh Sticker Chibi phản hồi:
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                  Nhấp 1 chạm để gửi ngay
+                </span>
+              </div>
+              <div
+                className="sticker-picker-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gap: '8px'
+                }}
+              >
+                {CHIBI_ASSETS.stickers.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => handleSendSticker(s.code)}
+                    title={`Gửi sticker: ${s.name}`}
+                    style={{
+                      background: '#ffffff',
+                      border: '1px solid var(--border)',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '8px 4px 6px 4px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '4px',
+                      transition: 'all 0.18s ease',
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-3px)';
+                      e.currentTarget.style.borderColor = '#3b82f6';
+                      e.currentTarget.style.backgroundColor = '#eff6ff';
+                      e.currentTarget.style.boxShadow = '0 4px 10px rgba(59,130,246,0.12)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.borderColor = 'var(--border)';
+                      e.currentTarget.style.backgroundColor = '#ffffff';
+                      e.currentTarget.style.boxShadow = '0 1px 2px rgba(0,0,0,0.03)';
+                    }}
+                  >
+                    <img
+                      src={s.src}
+                      alt={s.name}
+                      style={{ width: '48px', height: '48px', objectFit: 'contain' }}
+                    />
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                      {s.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="comment-input-row">
             <input
               type="text"
@@ -332,7 +513,12 @@ export default function TaskDrawer() {
           </div>
 
           {/* Attachments Section */}
-          <h4 className="drawer-section-title">Tệp đính kèm (tep_dinh_kem)</h4>
+          <h4 className="drawer-section-title" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            {chibiMode && (
+              <img src={CHIBI_ASSETS.icons.upload} alt="Upload" style={{ width: '15px', height: '15px', objectFit: 'contain' }} />
+            )}
+            <span>Tệp đính kèm</span>
+          </h4>
           <div id="drawer-attachments-list" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {attachments.length === 0 ? (
               <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>Chưa có tệp đính kèm.</div>

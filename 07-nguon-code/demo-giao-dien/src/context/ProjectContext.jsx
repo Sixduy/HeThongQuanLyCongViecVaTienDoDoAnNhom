@@ -20,6 +20,28 @@ export function ProjectProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Chibi Mascot Mode: Mặc định bật, lưu trong localStorage
+  const [chibiMode, setChibiMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem('dacs_chibi_mode');
+      return saved !== null ? saved === 'true' : true;
+    } catch {
+      return true;
+    }
+  });
+
+  const toggleChibiMode = useCallback(() => {
+    setChibiMode(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('dacs_chibi_mode', String(next));
+      } catch (e) {
+        console.warn('Không thể lưu localStorage:', e);
+      }
+      return next;
+    });
+  }, []);
+
   // Load initial data
   const loadData = useCallback(async () => {
     try {
@@ -178,6 +200,42 @@ export function ProjectProvider({ children }) {
     }
   };
 
+  // Action: Tự chấm tiến độ cho bản thân (Thành viên & Nhóm trưởng)
+  const selfRateTask = useCallback(async (taskId, newProgress) => {
+    try {
+      const targetTask = tasks.find(t => t.ma_cong_viec === taskId);
+      if (!targetTask) return;
+      if (targetTask.trang_thai_khoa) {
+        alert('Công việc này đã được chốt và khóa tiến độ, không thể tự chỉnh!');
+        return;
+      }
+
+      const isAssignee = targetTask.ma_nguoi_thuc_hien === currentUserId;
+      if (!isAssignee && !isLeader && !isLecturer) {
+        alert('Bạn chỉ có quyền tự chấm tiến độ cho công việc được phân công cho mình!');
+        return;
+      }
+
+      const p = Math.max(0, Math.min(100, Math.round(Number(newProgress))));
+      let newStatus = targetTask.trang_thai;
+      if (p === 100) {
+        newStatus = 'hoan_thanh';
+      } else if (p > 0 && targetTask.trang_thai === 'can_lam') {
+        newStatus = 'dang_lam';
+      }
+
+      await apiService.updateTask(taskId, {
+        phan_tram_tien_do: p,
+        trang_thai: newStatus
+      });
+
+      await loadData();
+    } catch (err) {
+      console.error('Lỗi tự chấm tiến độ:', err);
+      alert(`Lỗi tự chấm tiến độ: ${err.message}`);
+    }
+  }, [tasks, currentUserId, isLeader, isLecturer, loadData]);
+
   const value = {
     project,
     users,
@@ -194,6 +252,7 @@ export function ProjectProvider({ children }) {
     isTaskModalOpen,
     loading,
     error,
+    chibiMode,
     currentUser,
     isLecturer,
     isLeader,
@@ -210,6 +269,8 @@ export function ProjectProvider({ children }) {
     setScopeFilter,
     setSelectedTaskId,
     setIsTaskModalOpen,
+    toggleChibiMode,
+    selfRateTask,
     createTask: handleCreateTask,
     updateTaskProgress: handleUpdateTaskProgress,
     toggleTaskLock: handleToggleTaskLock,

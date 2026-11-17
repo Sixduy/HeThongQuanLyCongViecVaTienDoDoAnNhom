@@ -32,6 +32,16 @@ body {
   overflow: hidden;
 }
 
+.app-root-container {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  flex: 1;
+}
+
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
@@ -105,6 +115,7 @@ button, input, select, textarea {
 .workspace-wrapper {
   flex: 1;
   min-height: 0; /* Bắt buộc cho flexbox con để cuộn mượt mà không tràn */
+  height: calc(100vh - var(--rolebar-height));
   display: flex;
   width: 100%;
   margin-top: 0;
@@ -262,8 +273,28 @@ button, input, select, textarea {
   height: 100%;
   display: flex;
   flex-direction: column;
-  overflow: auto;
+  overflow-y: scroll; /* Luôn hiển thị thanh cuộn dọc rõ ràng khi nội dung dài */
+  overflow-x: hidden;
   background-color: var(--ground);
+  scrollbar-width: thin;
+  scrollbar-color: #94a3b8 #f1f5f9;
+}
+
+/* Custom Visible Scrollbar for Main Canvas */
+.main-canvas::-webkit-scrollbar {
+  width: 10px;
+}
+.main-canvas::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-left: 1px solid var(--border);
+}
+.main-canvas::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 5px;
+  border: 2px solid #f1f5f9;
+}
+.main-canvas::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
 }
 
 /* Workspace Header */
@@ -408,10 +439,66 @@ button, input, select, textarea {
   background-color: var(--ground);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 14px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.kpi-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.kpi-card-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.kpi-card-text {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.kpi-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  display: block;
+}
+
+.kpi-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--text);
+  display: block;
+  margin: 2px 0;
+}
+
+.kpi-subtext {
+  font-size: 11.5px;
+  color: var(--text-subtle);
+  display: block;
+}
+
+.kpi-chibi-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.08));
+  transition: transform 0.2s ease;
+}
+
+.kpi-card:hover .kpi-chibi-img {
+  transform: scale(1.08) rotate(3deg);
 }
 
 /* Kanban Board Layout & Wrapper */
@@ -644,10 +731,11 @@ button, input, select, textarea {
 
 .task-drawer {
   width: var(--drawer-width);
+  max-width: 95vw;
   height: 100%;
   background-color: var(--ground);
   border-left: 1px solid var(--border);
-  box-shadow: var(--shadow-drawer);
+  box-shadow: -8px 0 35px rgba(0, 0, 0, 0.12);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -655,26 +743,28 @@ button, input, select, textarea {
 }
 
 .drawer-header {
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background-color: var(--surface);
 }
 
 .drawer-header h3 {
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 16.5px;
+  font-weight: 700;
+  color: var(--text);
 }
 
 .btn-close {
   background: transparent;
   border: none;
-  font-size: 18px;
+  font-size: 22px;
   cursor: pointer;
   color: var(--text-muted);
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -687,12 +777,23 @@ button, input, select, textarea {
 }
 
 .drawer-body {
-  padding: 20px;
+  padding: 24px;
   overflow-y: auto;
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
+}
+
+.drawer-body::-webkit-scrollbar {
+  width: 8px;
+}
+.drawer-body::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+.drawer-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .drawer-field {
@@ -1360,5 +1461,110 @@ button, input, select, textarea {
   font-size: 11.5px;
   color: var(--text-subtle);
   padding: 8px 4px;
+}
+
+/* ==========================================================================
+   Chibi Mascot Visual Enhancements & Self Progress Rating Styles
+   ========================================================================== */
+
+@keyframes chibi-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes chibi-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.brand-icon-chibi {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-task-card {
+  border-left: 3px solid #3b82f6 !important;
+  background-color: #fafbfc;
+}
+
+.my-task-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #1d4ed8;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.quick-self-rate-container {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 6px 0 8px 0;
+  padding: 4px 6px;
+  background: #f8fafc;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+}
+
+.quick-self-rate-container .rate-hint {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.btn-quick-rate {
+  flex: 1;
+  padding: 2px 4px;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-quick-rate:hover {
+  border-color: #3b82f6;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.btn-quick-rate.active {
+  background: #1d4ed8;
+  color: #ffffff;
+  border-color: #1d4ed8;
+}
+
+.sticker-picker-strip button:hover img {
+  transform: scale(1.2);
+  transition: transform 0.15s ease;
+}
+
+.btn-chibi-toggle:hover {
+  filter: brightness(1.05);
+}
+
+/* Fallback when chibi mode is toggled OFF */
+.chibi-inactive img[src*="/assets/chibi/"] {
+  display: none !important;
+}
+.chibi-inactive .avatar-frame-wrap img {
+  display: none !important;
+}
+.chibi-inactive .journey-map-banner {
+  display: none !important;
 }
 

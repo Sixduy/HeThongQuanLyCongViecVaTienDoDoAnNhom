@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useProject } from '../context/ProjectContext.jsx';
 import { formatDate } from '../utils/formatters.js';
+import { CHIBI_ASSETS } from '../constants/chibiAssets.js';
 
 export default function Header({ activeTab, setActiveTab }) {
   const {
@@ -13,7 +14,8 @@ export default function Header({ activeTab, setActiveTab }) {
     isLecturer,
     canCreateTask,
     setIsTaskModalOpen,
-    kpis
+    kpis,
+    chibiMode
   } = useProject();
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -35,8 +37,13 @@ export default function Header({ activeTab, setActiveTab }) {
   const filterLabel = activeMilestone ? activeMilestone.ten_moc.split(':')[0] : 'Lọc theo Mốc';
 
   const instructorName = project?.instructor?.ho_ten || 'ThS. Bùi Phú Khuyên';
-  const courseName = project?.project?.ten_mon_hoc || 'Đồ án cơ sở';
-  const projectType = project?.project?.loai_do_an === 'co_so' ? 'Cơ sở (co_so)' : (project?.project?.loai_do_an || 'Cơ sở (co_so)');
+  const courseName = project?.project?.ten_mon_hoc || 'Môn: Công nghệ phần mềm';
+  const loaiMap = {
+    mon_hoc: 'Đồ án Môn học',
+    co_so: 'Đồ án Cơ sở',
+    chuyen_nganh: 'Đồ án Chuyên ngành'
+  };
+  const projectType = loaiMap[project?.project?.loai_do_an] || 'Đồ án Môn học';
   const projectTitle = project?.project?.ten_do_an || 'Hệ thống quản lý công việc và tiến độ đồ án nhóm';
   const projectStatus = 'Đang thực hiện';
 
@@ -48,7 +55,12 @@ export default function Header({ activeTab, setActiveTab }) {
           <div className="project-meta-pills">
             <span className="meta-pill" id="pill-course-name">{courseName}</span>
             <span className="meta-pill" id="pill-project-type">Loại: {projectType}</span>
-            <span className="meta-pill" id="pill-status-badge">{projectStatus}</span>
+            <span className="meta-pill" id="pill-status-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              {chibiMode && (
+                <img src={CHIBI_ASSETS.logos.stampOnTrack} alt="On track" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
+              )}
+              {projectStatus}
+            </span>
             <span className="meta-pill" id="pill-instructor">GVHD: {instructorName}</span>
           </div>
         </div>
@@ -159,7 +171,7 @@ export default function Header({ activeTab, setActiveTab }) {
 
       {/* Dynamic Overall Progress Track */}
       <div className="progress-summary-bar">
-        <span className="progress-label">Tiến độ tổng thể đồ án (do_an.tien_do_tong):</span>
+        <span className="progress-label">Tiến độ tổng thể đồ án:</span>
         <div className="progress-track">
           <div
             className="progress-fill"
