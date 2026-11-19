@@ -44,8 +44,26 @@ export default function Header({ activeTab, setActiveTab }) {
     chuyen_nganh: 'Đồ án Chuyên ngành'
   };
   const projectType = loaiMap[project?.project?.loai_do_an] || 'Đồ án Môn học';
-  const projectTitle = project?.project?.ten_do_an || 'Hệ thống quản lý công việc và tiến độ đồ án nhóm';
+  const projectTitle = project?.project?.ten_do_an || 'Hệ thống quản lý công việc và tiến độ đồ án môn học';
   const projectStatus = 'Đang thực hiện';
+
+  // Chibi Runner state calculation
+  const progressNum = parseFloat(overallProgress) || 0;
+  let runnerIcon = CHIBI_ASSETS.characters.coLen;
+  let runnerSpeech = 'Khởi động nào!';
+  if (progressNum >= 100) {
+    runnerIcon = CHIBI_ASSETS.characters.success;
+    runnerSpeech = 'Về đích 100%! 🎉';
+  } else if (progressNum >= 75) {
+    runnerIcon = CHIBI_ASSETS.characters.deadline;
+    runnerSpeech = 'Nước rút về đích! 🚀';
+  } else if (progressNum >= 40) {
+    runnerIcon = CHIBI_ASSETS.characters.coding;
+    runnerSpeech = 'Đang cày code! 💻';
+  } else if (progressNum > 0) {
+    runnerIcon = CHIBI_ASSETS.characters.coLen;
+    runnerSpeech = 'Cố lên nhóm ơi! ✨';
+  }
 
   return (
     <header className="canvas-header">
@@ -169,15 +187,36 @@ export default function Header({ activeTab, setActiveTab }) {
         </div>
       </div>
 
-      {/* Dynamic Overall Progress Track */}
+      {/* Dynamic Overall Progress Track with Chibi Marathon Runner */}
       <div className="progress-summary-bar">
         <span className="progress-label">Tiến độ tổng thể đồ án:</span>
-        <div className="progress-track">
-          <div
-            className="progress-fill"
-            id="overall-progress-fill"
-            style={{ width: `${overallProgress}%` }}
-          ></div>
+        <div className="progress-track-wrapper">
+          <div className="progress-track">
+            <div
+              className="progress-fill"
+              id="overall-progress-fill"
+              style={{ width: `${progressNum}%` }}
+            ></div>
+          </div>
+          {chibiMode && (
+            <div
+              className="chibi-progress-runner"
+              style={{ left: `calc(${Math.min(Math.max(progressNum, 2), 97)}% - 14px)` }}
+              title={`Tiến độ hiện tại: ${progressNum}% - ${runnerSpeech}`}
+            >
+              <div className="runner-speech-bubble">{runnerSpeech}</div>
+              <img
+                src={runnerIcon}
+                alt="Runner"
+                className="runner-mascot-img"
+              />
+            </div>
+          )}
+          {chibiMode && (
+            <div className="track-finish-cup" title="Cột mốc hoàn thành 100%">
+              <img src={CHIBI_ASSETS.icons.trophy} alt="Cup" />
+            </div>
+          )}
         </div>
         <span className="progress-value num-tabular" id="overall-progress-text">
           {overallProgress}%

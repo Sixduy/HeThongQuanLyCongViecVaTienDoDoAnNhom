@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useProject } from '../context/ProjectContext.jsx';
 import { formatDate } from '../utils/formatters.js';
+import { CHIBI_ASSETS } from '../constants/chibiAssets.js';
 
 export default function MiniCalendarWidget() {
-  const { filteredTasks, milestones, setSelectedTaskId } = useProject();
+  const { filteredTasks, milestones, setSelectedTaskId, chibiMode } = useProject();
 
   // Mặc định tháng hiển thị: Tháng 10/2026 (trùng dữ liệu mẫu đồ án) hoặc tháng hiện tại
   const [currentDate, setCurrentDate] = useState(() => {
@@ -187,12 +188,16 @@ export default function MiniCalendarWidget() {
       {/* Widget Header */}
       <div className="mini-cal-header">
         <div className="mini-cal-title-wrap">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
+          {chibiMode ? (
+            <img src={CHIBI_ASSETS.logos.deadlineFighter} alt="Deadline" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
+          ) : (
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          )}
           <span className="mini-cal-title">Lịch Hạn Chót & Mốc</span>
         </div>
       </div>

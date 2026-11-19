@@ -1,12 +1,14 @@
-// Danh mục tài nguyên Chibi chuyên biệt cho Đồ án DACS
+// ==============================================================================
+// DANH MỤC TÀI NGUYÊN CHIBI CHUYÊN BIỆT CHO ĐỒ ÁN (ĐÃ TINH GỌN CHUẨN XÁC)
+// Chỉ giữ lại 45 hình ảnh thực tế được sử dụng trong toàn bộ hệ thống
+// ==============================================================================
+
 export const CHIBI_ASSETS = {
   logos: {
     team: '/assets/chibi/logos/logo-kanban-team.png',
-    hub: '/assets/chibi/logos/logo-progress-hub.png',
     gearTick: '/assets/chibi/logos/logo-gear-tick.png',
     deadlineFighter: '/assets/chibi/logos/logo-deadline-fighter.png',
-    stampOnTrack: '/assets/chibi/logos/logo-stamp-on-track.png',
-    stampAtRisk: '/assets/chibi/logos/logo-stamp-at-risk.png'
+    stampOnTrack: '/assets/chibi/logos/logo-stamp-on-track.png'
   },
   avatarFrames: {
     gv: '/assets/chibi/avatar-frames/avatar-frame-gv.png',
@@ -17,26 +19,22 @@ export const CHIBI_ASSETS = {
     leader: '/assets/chibi/badges/badge-level-leader.png',
     fresher: '/assets/chibi/badges/badge-level-fresher.png',
     onTime: '/assets/chibi/badges/badge-nop-dung-han.png',
-    streak7: '/assets/chibi/badges/badge-streak-7.png',
     review10: '/assets/chibi/badges/badge-review-10.png'
   },
   characters: {
     coding: '/assets/chibi/characters/char-coding.png',
     coLen: '/assets/chibi/characters/char-co-len.png',
     ganhTa: '/assets/chibi/characters/char-leader-ganh-ta.png',
-    leader: '/assets/chibi/characters/char-leader.png',
     deadline: '/assets/chibi/characters/char-deadline-chay.png',
     tieuChay: '/assets/chibi/characters/char-deadline-tieu-chay.png',
     success: '/assets/chibi/characters/char-success.png',
+    triumph: '/assets/chibi/characters/char-success.png',
     empty: '/assets/chibi/characters/char-empty.png',
     emptyWait: '/assets/chibi/characters/char-empty-wait.png',
     notify: '/assets/chibi/characters/char-notify.png',
     gvReview: '/assets/chibi/characters/char-gv-review.png',
     milestoneFlag: '/assets/chibi/characters/char-milestone-flag.png',
-    meeting: '/assets/chibi/characters/char-meeting.png',
-    chiaTask: '/assets/chibi/characters/char-chia-task.png',
-    victoryBoy: '/assets/chibi/characters/char-victory-boy.png',
-    victoryGirl: '/assets/chibi/characters/char-victory-girl.png'
+    chiaTask: '/assets/chibi/characters/char-chia-task.png'
   },
   icons: {
     todo: '/assets/chibi/icons/icon-sticky-todo.png',
@@ -49,25 +47,15 @@ export const CHIBI_ASSETS = {
     upload: '/assets/chibi/icons/icon-cloud-upload.png',
     boba: '/assets/chibi/icons/icon-boba.png',
     bell: '/assets/chibi/icons/icon-bell-badge.png',
-    flag: '/assets/chibi/icons/icon-calendar-flag.png',
-    laptop: '/assets/chibi/icons/icon-laptop.png'
+    flag: '/assets/chibi/icons/icon-calendar-flag.png'
   },
   labels: {
     done: '/assets/chibi/labels/label-done.png',
-    xongRoi: '/assets/chibi/labels/label-xong-roi.png',
-    hundred: '/assets/chibi/labels/label-100.png',
-    tienDo: '/assets/chibi/labels/label-tien-do.png',
-    coLen: '/assets/chibi/labels/label-co-len.png',
-    chayDeadline: '/assets/chibi/labels/label-chay-deadline.png',
-    deadline2359: '/assets/chibi/labels/label-deadline-2359.png',
     approved: '/assets/chibi/labels/label-approved.png',
-    ganhTa: '/assets/chibi/labels/label-ganh-ta.png',
-    leader: '/assets/chibi/labels/label-leader-badge.png'
+    chayDeadline: '/assets/chibi/labels/label-chay-deadline.png'
   },
   loading: {
-    orbit: '/assets/chibi/loading/loading-sticky-orbit.png',
-    gear: '/assets/chibi/loading/loading-gear-spin.png',
-    blob: '/assets/chibi/loading/loading-blob.png'
+    orbit: '/assets/chibi/loading/loading-sticky-orbit.png'
   },
   journey: '/assets/chibi/journeys/journey-do-an-map.png',
   stickers: [

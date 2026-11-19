@@ -11,7 +11,8 @@ export default function KpiCards() {
 
   return (
     <div className="kpi-grid">
-      <div className="kpi-card">
+      {/* 1. Tổng số công việc */}
+      <div className="kpi-card kpi-card-total">
         <div className="kpi-card-inner">
           <div className="kpi-card-text">
             <span className="kpi-label">Tổng số công việc</span>
@@ -19,16 +20,18 @@ export default function KpiCards() {
             <span className="kpi-subtext">Trong 4 mốc tiến độ</span>
           </div>
           {chibiMode && (
-            <img
-              src={CHIBI_ASSETS.icons.checklist}
-              alt="Tổng việc"
-              className="kpi-chibi-img"
-            />
+            <div className="kpi-watermark-mascot">
+              <img
+                src={CHIBI_ASSETS.characters.chiaTask}
+                alt="Tổng việc"
+              />
+            </div>
           )}
         </div>
       </div>
 
-      <div className="kpi-card">
+      {/* 2. Đang thực hiện */}
+      <div className="kpi-card kpi-card-progress">
         <div className="kpi-card-inner">
           <div className="kpi-card-text">
             <span className="kpi-label">Đang thực hiện</span>
@@ -38,16 +41,18 @@ export default function KpiCards() {
             <span className="kpi-subtext">Đang trong hạn quy định</span>
           </div>
           {chibiMode && (
-            <img
-              src={CHIBI_ASSETS.characters.coding}
-              alt="Đang thực hiện"
-              className="kpi-chibi-img"
-            />
+            <div className="kpi-watermark-mascot">
+              <img
+                src={CHIBI_ASSETS.characters.coding}
+                alt="Đang thực hiện"
+              />
+            </div>
           )}
         </div>
       </div>
 
-      <div className="kpi-card">
+      {/* 3. Đã hoàn thành */}
+      <div className="kpi-card kpi-card-completed">
         <div className="kpi-card-inner">
           <div className="kpi-card-text">
             <span className="kpi-label">Đã hoàn thành</span>
@@ -57,30 +62,33 @@ export default function KpiCards() {
             <span className="kpi-subtext">Đã chốt tiến độ</span>
           </div>
           {chibiMode && (
-            <img
-              src={CHIBI_ASSETS.icons.trophy}
-              alt="Hoàn thành"
-              className="kpi-chibi-img"
-            />
+            <div className="kpi-watermark-mascot">
+              <img
+                src={CHIBI_ASSETS.characters.success}
+                alt="Hoàn thành"
+              />
+            </div>
           )}
         </div>
       </div>
 
-      <div className="kpi-card">
+      {/* 4. Cảnh báo trễ hạn */}
+      <div className="kpi-card kpi-card-overdue">
         <div className="kpi-card-inner">
           <div className="kpi-card-text">
             <span className="kpi-label">Cảnh báo trễ hạn</span>
             <span className="kpi-value num-tabular" style={{ color: '#b91c1c' }} id="kpi-overdue">
               {overdue}
             </span>
-            <span className="kpi-subtext">Cần xử lý gấp</span>
+            <span className="kpi-subtext">{overdue > 0 ? 'Cần xử lý gấp' : 'Tuyệt vời, 0 việc trễ'}</span>
           </div>
           {chibiMode && (
-            <img
-              src={CHIBI_ASSETS.characters.tieuChay}
-              alt="Trễ hạn"
-              className="kpi-chibi-img"
-            />
+            <div className="kpi-watermark-mascot">
+              <img
+                src={overdue > 0 ? CHIBI_ASSETS.characters.tieuChay : CHIBI_ASSETS.characters.success}
+                alt="Trễ hạn"
+              />
+            </div>
           )}
         </div>
       </div>

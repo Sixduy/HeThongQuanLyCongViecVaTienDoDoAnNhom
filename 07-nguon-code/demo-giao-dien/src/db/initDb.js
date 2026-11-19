@@ -44,7 +44,7 @@ if (userCount === 0) {
   `);
   insertProject.run(
     'da-dacs-01',
-    'Hệ thống quản lý công việc và tiến độ đồ án nhóm',
+    'Hệ thống quản lý công việc và tiến độ đồ án môn học',
     'mon_hoc',
     'Môn: Công nghệ phần mềm',
     'Hệ thống web hỗ trợ sinh viên và giảng viên theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.',

@@ -39,7 +39,7 @@ export const mockDatabase = {
   do_an: [
     {
       ma_do_an: "da-dacs-01",
-      ten_do_an: "Hệ thống quản lý công việc và tiến độ đồ án nhóm",
+      ten_do_an: "Hệ thống quản lý công việc và tiến độ đồ án môn học",
       loai_do_an: "mon_hoc",
       ten_mon_hoc: "Môn: Công nghệ phần mềm",
       noi_dung_muc_tieu: "Xây dựng hệ thống web hỗ trợ nhóm sinh viên và giảng viên hướng dẫn theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.",
