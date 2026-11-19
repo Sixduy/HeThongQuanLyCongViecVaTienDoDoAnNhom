@@ -37,7 +37,7 @@ export default function BannerRoleBar() {
             style={{ width: '30px', height: '30px', marginRight: '8px', objectFit: 'contain' }}
           />
         )}
-        <span style={{ fontWeight: 600, fontSize: '13px' }}>QUẢN LÝ CÔNG VIỆC</span>
+        <span style={{ fontWeight: 700, fontSize: '13px', letterSpacing: '0.4px' }}>HỆ THỐNG QUẢN LÝ ĐỒ ÁN MÔN HỌC</span>
         <span className="banner-hint-text" style={{ fontSize: '11.5px', color: '#a1a1aa', marginLeft: '8px' }}>
           &bull; {permissionHint}
         </span>

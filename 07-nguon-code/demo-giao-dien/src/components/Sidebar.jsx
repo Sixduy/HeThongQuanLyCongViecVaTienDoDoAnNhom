@@ -45,23 +45,27 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <div className="project-brand">
-          {chibiMode ? (
-            <div className="brand-icon-chibi">
-              <img
-                src={CHIBI_ASSETS.logos.team}
-                alt="Logo Nhóm 05"
-                style={{ width: '48px', height: '48px', objectFit: 'contain' }}
-              />
+        {chibiMode ? (
+          <div className="sidebar-brand-banner" title={brandName}>
+            <img
+              src={CHIBI_ASSETS.logos.team}
+              alt="Logo Nhóm 05"
+              className="brand-banner-bg"
+            />
+            <div className="brand-banner-overlay">
+              <span className="brand-banner-tag">CNPM &bull; 2026</span>
+              <h1 id="brand-project-name" className="brand-banner-title">{brandName}</h1>
             </div>
-          ) : (
-            <div className="brand-icon">D5</div>
-          )}
-          <div className="brand-info">
-            <h1 id="brand-project-name">{brandName}</h1>
-            <p>CNPM &bull; DACS 2026</p>
           </div>
-        </div>
+        ) : (
+          <div className="project-brand">
+            <div className="brand-icon">D5</div>
+            <div className="brand-info">
+              <h1 id="brand-project-name">{brandName}</h1>
+              <p>CNPM &bull; 2026</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <nav className="sidebar-nav">

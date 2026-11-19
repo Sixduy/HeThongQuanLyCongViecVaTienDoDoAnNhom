@@ -70,15 +70,24 @@ export default function KanbanBoard() {
 
                   <div className="kanban-cards-list" id={`list-${col.key}`}>
                     {colTasks.length === 0 ? (
-                      <div className="kanban-empty-col" style={{ textAlign: 'center', padding: '36px 12px', color: 'var(--text-subtle)' }}>
+                      <div className="kanban-empty-col" style={{ textAlign: 'center', padding: '32px 12px', color: 'var(--text-subtle)' }}>
                         {chibiMode && (
                           <img
-                            src={CHIBI_ASSETS.characters.emptyWait}
+                            src={col.key === 'tre_han' ? CHIBI_ASSETS.characters.success : (col.key === 'hoan_thanh' ? CHIBI_ASSETS.characters.coLen : CHIBI_ASSETS.characters.emptyWait)}
                             alt="Trống"
-                            style={{ width: '72px', height: '72px', objectFit: 'contain', margin: '0 auto 10px', display: 'block', opacity: 0.85 }}
+                            style={{ width: '68px', height: '68px', objectFit: 'contain', margin: '0 auto 8px', display: 'block' }}
                           />
                         )}
-                        <span style={{ fontSize: '12px', fontWeight: 500 }}>Chưa có việc nào</span>
+                        <span style={{ fontSize: '12px', fontWeight: 600, display: 'block', color: col.key === 'tre_han' ? '#16a34a' : 'inherit' }}>
+                          {col.key === 'tre_han'
+                            ? '🎉 Không có việc trễ hạn!'
+                            : (col.key === 'hoan_thanh' ? 'Chưa có task hoàn thành' : 'Chưa có việc nào')}
+                        </span>
+                        {col.key === 'tre_han' && (
+                          <span style={{ fontSize: '11px', color: '#15803d', marginTop: '2px', display: 'block' }}>
+                            Nhóm đang bám sát tiến độ rất tốt ✨
+                          </span>
+                        )}
                       </div>
                     ) : (
                       colTasks.map(task => {

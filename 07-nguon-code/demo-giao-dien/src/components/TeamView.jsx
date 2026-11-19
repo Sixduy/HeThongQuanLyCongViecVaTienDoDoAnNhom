@@ -4,7 +4,7 @@ import { formatDate, getInitials } from '../utils/formatters.js';
 import { CHIBI_ASSETS } from '../constants/chibiAssets.js';
 
 export default function TeamView() {
-  const { teamMembers, project, chibiMode } = useProject();
+  const { teamMembers, project, chibiMode, tasks } = useProject();
 
   const instructor = teamMembers?.instructor || project?.instructor;
   const members = teamMembers?.members || [];
@@ -12,117 +12,132 @@ export default function TeamView() {
 
   return (
     <div id="view-team-container" className="view-container">
-      <div id="team-list-render" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-        {/* Giảng viên hướng dẫn */}
-        <div className="kpi-card" style={{ padding: '18px 20px', position: 'relative' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-            Giảng viên hướng dẫn
-          </h3>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <div style={{ position: 'relative', width: '46px', height: '46px', flexShrink: 0 }}>
-                <div className="user-avatar" style={{ width: '40px', height: '40px', fontSize: '13px', position: 'absolute', top: '3px', left: '3px' }}>
+      <div id="team-list-render" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {/* 1. Giảng viên hướng dẫn - Thẻ Mentor Học Thuật */}
+        <div className="kpi-card hero-mentor-card">
+          <div className="hero-card-header-bar">
+            <span className="hero-mentor-ribbon">Giảng viên hướng dẫn &bull; Hội đồng đánh giá</span>
+          </div>
+
+          <div className="hero-mentor-body">
+            <div className="hero-mentor-left">
+              <div style={{ position: 'relative', width: '56px', height: '56px', flexShrink: 0 }}>
+                <div className="user-avatar hero-mentor-avatar">
                   GV
                 </div>
                 {chibiMode && (
                   <img
                     src={CHIBI_ASSETS.avatarFrames.gv}
                     alt="Khung GV"
-                    style={{ position: 'absolute', top: '-4px', left: '-4px', width: '54px', height: '54px', pointerEvents: 'none' }}
+                    className="hero-avatar-frame"
                   />
                 )}
               </div>
               <div>
-                <div style={{ fontSize: '14.5px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ fontSize: '16px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span>{instructor?.ho_ten || 'ThS. Bùi Phú Khuyên'}</span>
                   {chibiMode && (
-                    <img src={CHIBI_ASSETS.badges.review10} alt="Review 10" title="Đánh giá đồ án" style={{ width: '18px', height: '18px' }} />
+                    <img src={CHIBI_ASSETS.badges.review10} alt="Review 10" title="Đánh giá đồ án" style={{ width: '22px', height: '22px' }} />
                   )}
                 </div>
-                <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{instructor?.email || 'bpkhuyen@hutech.edu.vn'}</div>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                  {instructor?.email || 'khuyenbp@huflit.edu.vn'} &bull; Khoa Công nghệ thông tin
+                </div>
+                <div className="hero-mentor-quote">
+                  "Đồng hành, định hướng kiến trúc chuẩn hóa CSDL và theo sát tiến độ 10 tuần của nhóm sinh viên."
+                </div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              {chibiMode && (
+            {chibiMode && (
+              <div className="hero-mentor-watermark">
                 <img
                   src={CHIBI_ASSETS.characters.gvReview}
                   alt="GV Review"
-                  style={{ width: '42px', height: '42px', objectFit: 'contain' }}
                 />
-              )}
-              <span className="meta-pill" style={{ background: '#f1f5f9', fontWeight: 600 }}>Phụ trách đồ án</span>
-            </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Thành viên nhóm sinh viên */}
-        <div className="kpi-card" style={{ padding: '18px 20px' }}>
-          <h3 style={{ fontSize: '13px', fontWeight: 600, marginBottom: '12px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>
-            Thành viên nhóm sinh viên ({team?.ten_nhom || 'Nhóm'})
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* 2. Thành viên nhóm sinh viên - Thẻ Hero Cards */}
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Thành viên nhóm sinh viên ({team?.ten_nhom || 'Nhóm Đồ án Môn học 05'})
+            </h3>
+            <span style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>Mô hình phối hợp 2 thành viên</span>
+          </div>
+
+          <div className="hero-members-grid">
             {members.map(tv => {
               const isLeader = tv.vai_tro_trong_nhom === 'nhom_truong';
               const frame = isLeader ? CHIBI_ASSETS.avatarFrames.leader : CHIBI_ASSETS.avatarFrames.member;
               const badge = isLeader ? CHIBI_ASSETS.badges.leader : CHIBI_ASSETS.badges.onTime;
               const charImg = isLeader ? CHIBI_ASSETS.characters.ganhTa : CHIBI_ASSETS.characters.coding;
 
+              const memberTasks = tasks?.filter(t => t.ma_nguoi_thuc_hien === tv.ma_nguoi_dung) || [];
+              const doneTasks = memberTasks.filter(t => t.trang_thai === 'hoan_thanh').length;
+
               return (
                 <div
                   key={tv.ma_thanh_vien || tv.ma_nguoi_dung}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 'var(--radius-md)'
-                  }}
+                  className={`kpi-card hero-member-card ${isLeader ? 'card-hero-leader' : 'card-hero-member'}`}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{ position: 'relative', width: '42px', height: '42px', flexShrink: 0 }}>
-                      <div className="user-avatar" style={{ width: '36px', height: '36px', fontSize: '12.5px', position: 'absolute', top: '3px', left: '3px' }}>
+                  <div className="hero-member-header">
+                    <span className={`hero-role-pill ${isLeader ? 'pill-leader' : 'pill-member'}`}>
+                      {isLeader ? '★ Nhóm trưởng (Gánh Vác)' : '⚡ Lập trình viên (Chiến Binh)'}
+                    </span>
+                    {chibiMode && (
+                      <img src={badge} alt="Badge" title={isLeader ? 'Thủ lĩnh' : 'Đúng hạn'} style={{ width: '22px', height: '22px' }} />
+                    )}
+                  </div>
+
+                  <div className="hero-member-profile">
+                    <div style={{ position: 'relative', width: '52px', height: '52px', flexShrink: 0 }}>
+                      <div className="user-avatar" style={{ width: '44px', height: '44px', fontSize: '14px', position: 'absolute', top: '4px', left: '4px' }}>
                         {getInitials(tv.ho_ten)}
                       </div>
                       {chibiMode && (
                         <img
                           src={frame}
                           alt="Frame"
-                          style={{ position: 'absolute', top: '-4px', left: '-4px', width: '50px', height: '50px', pointerEvents: 'none' }}
+                          style={{ position: 'absolute', top: '-4px', left: '-4px', width: '60px', height: '60px', pointerEvents: 'none' }}
                         />
                       )}
                     </div>
-                    <div>
-                      <div style={{ fontSize: '14px', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{tv.ho_ten}</span>
-                        {chibiMode && (
-                          <img src={badge} alt="Badge" title={isLeader ? 'Gánh đội' : 'Nộp đúng hạn'} style={{ width: '16px', height: '16px' }} />
-                        )}
-                      </div>
-                      <div style={{ fontSize: '11.5px', color: 'var(--text-muted)' }}>
-                        {tv.email} &bull; Tham gia: {formatDate(tv.thoi_gian_tham_gia)}
-                      </div>
+
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <h4 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {tv.ho_ten}
+                      </h4>
+                      <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                        {tv.email}
+                      </p>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    {chibiMode && (
+                  <div className="hero-member-footer">
+                    <div className="hero-stat-box">
+                      <span className="stat-label">Công việc đảm nhiệm</span>
+                      <span className="stat-value">{memberTasks.length} việc ({doneTasks} xong)</span>
+                    </div>
+                    <div className="hero-duty-text">
+                      {isLeader
+                        ? 'Phụ trách: CSDL chuẩn BCNF, Backend Node.js & Điều phối'
+                        : 'Phụ trách: Giao diện React, Thuyết minh báo cáo & Kiểm thử'}
+                    </div>
+                  </div>
+
+                  {/* Character Illustration Watermark */}
+                  {chibiMode && (
+                    <div className="hero-character-watermark">
                       <img
                         src={charImg}
-                        alt="Mascot"
-                        title={isLeader ? 'Nhóm trưởng gánh tạ' : 'Thành viên coding'}
-                        style={{ width: '36px', height: '36px', objectFit: 'contain' }}
+                        alt="Hero Mascot"
                       />
-                    )}
-                    <span
-                      className="meta-pill"
-                      style={isLeader ? { background: '#eff6ff', color: '#1d4ed8', borderColor: '#bfdbfe', fontWeight: 600 } : {}}
-                    >
-                      {isLeader ? '★ Nhóm trưởng' : 'Thành viên'}
-                    </span>
-                  </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

@@ -395,29 +395,62 @@ export default function TaskDrawer() {
               <span>100% (Hoàn thành)</span>
             </div>
 
-            {/* Mascot động viên khi tự chấm */}
+            {/* Sân khấu Cảm xúc Mascot khi tự chấm tiến độ */}
             {chibiMode && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '12px', padding: '10px 14px', background: '#ffffff', borderRadius: 'var(--radius-md)', border: '1px dashed var(--border)' }}>
-                <img
-                  src={
-                    progress === 100 ? CHIBI_ASSETS.characters.success :
-                    (progress >= 75 ? CHIBI_ASSETS.characters.deadline :
-                    (progress >= 50 ? CHIBI_ASSETS.characters.coding :
-                    (progress > 0 ? CHIBI_ASSETS.characters.coLen : CHIBI_ASSETS.characters.emptyWait)))
-                  }
-                  alt="Mascot"
-                  style={{ width: '48px', height: '48px', objectFit: 'contain', flexShrink: 0 }}
-                />
-                <div style={{ fontSize: '12.5px', color: 'var(--text)', lineHeight: '1.4' }}>
-                  {progress === 100 && '🎉 Đã đạt 100%! Đề xuất chuyển trạng thái Hoàn thành để chốt khóa.'}
-                  {progress >= 75 && progress < 100 && '🚀 Đang chạy nước rút! Sắp hoàn thành rồi.'}
-                  {progress >= 50 && progress < 75 && '💻 Đang làm rất tốt, tiếp tục phát huy nhé!'}
-                  {progress > 0 && progress < 50 && '🌱 Đã khởi động công việc, cố lên nào!'}
-                  {progress === 0 && '📌 Công việc chưa bắt đầu, hãy tự chấm % khi có tiến triển nhé.'}
+              <div
+                className={`mascot-stage-card stage-${progress === 100 ? 'done' : progress >= 75 ? 'sprint' : progress >= 50 ? 'coding' : progress > 0 ? 'start' : 'wait'}`}
+              >
+                <div className="mascot-stage-figure">
+                  <img
+                    src={
+                      progress === 100 ? CHIBI_ASSETS.characters.success :
+                      (progress >= 75 ? CHIBI_ASSETS.characters.deadline :
+                      (progress >= 50 ? CHIBI_ASSETS.characters.coding :
+                      (progress > 0 ? CHIBI_ASSETS.characters.coLen : CHIBI_ASSETS.characters.emptyWait)))
+                    }
+                    alt="Mascot Stage"
+                    className="mascot-stage-img"
+                  />
+                  {progress === 100 && (
+                    <span className="mascot-stage-confetti">🎉✨</span>
+                  )}
+                </div>
+                <div className="mascot-stage-dialogue">
+                  <div className="mascot-stage-title">
+                    {progress === 100 && '🎉 Đỉnh nóc kịch trần! (100%)'}
+                    {progress >= 75 && progress < 100 && '🚀 Nước rút deadline! (75%)'}
+                    {progress >= 50 && progress < 75 && '💻 Code miệt mài! (50%)'}
+                    {progress > 0 && progress < 50 && '🌱 Đã khởi động! (25%)'}
+                    {progress === 0 && '📌 Chờ việc vào guồng (0%)'}
+                  </div>
+                  <div className="mascot-stage-quote">
+                    {progress === 100 && 'Mục tiêu hoàn thành mỹ mãn! Đề xuất chuyển trạng thái để Nhóm trưởng/GVHD chốt khóa.'}
+                    {progress >= 75 && progress < 100 && 'Đang dốc toàn lực những bước cuối, sắp tới mốc nghiệm thu rồi!'}
+                    {progress >= 50 && progress < 75 && 'Đã qua nửa chặng đường quan trọng, tiếp tục giữ vững phong độ nhé!'}
+                    {progress > 0 && progress < 50 && 'Đã khảo sát và phân tích tài liệu xong, chuẩn bị tăng tốc thực thi.'}
+                    {progress === 0 && 'Task chưa bắt đầu, hãy chọn % phía trên mỗi khi bạn có tiến độ mới nhé.'}
+                  </div>
                 </div>
               </div>
             )}
           </div>
+
+          {/* Locked Status Banner with Seal */}
+          {isLocked && (
+            <div className="task-locked-seal-banner">
+              {chibiMode && (
+                <img
+                  src={CHIBI_ASSETS.labels.approved}
+                  alt="Approved"
+                  className="locked-seal-img"
+                />
+              )}
+              <div className="locked-seal-info">
+                <span className="locked-seal-title">🔒 Đã Chốt & Niêm Phong Tiến Độ</span>
+                <span className="locked-seal-desc">Công việc đã được nghiệm thu và khóa bảo vệ. Chỉ Nhóm trưởng hoặc GVHD mới có quyền mở lại.</span>
+              </div>
+            </div>
+          )}
 
           {/* Lock Action Button */}
           {!isLocked && canLockTask && (
