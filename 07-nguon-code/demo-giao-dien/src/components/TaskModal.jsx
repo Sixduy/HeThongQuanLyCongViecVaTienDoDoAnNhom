@@ -19,11 +19,15 @@ export default function TaskModal() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (isTaskModalOpen && milestones.length > 0 && !milestoneId) {
-      setMilestoneId(milestones[0].ma_moc);
+    if (isTaskModalOpen && milestones.length > 0) {
+      const validMs = milestones.some(m => m.ma_moc === milestoneId);
+      if (!validMs) {
+        setMilestoneId(milestones[0].ma_moc);
+      }
     }
     if (!isTaskModalOpen) {
       setTitle('');
+      setMilestoneId('');
       setAssigneeId('');
       setDeadline('');
       setDesc('');

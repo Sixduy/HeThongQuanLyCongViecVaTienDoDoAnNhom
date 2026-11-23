@@ -10,11 +10,23 @@ import TableView from './components/TableView.jsx';
 import MilestonesView from './components/MilestonesView.jsx';
 import TeamView from './components/TeamView.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
+import ClassroomPortalView from './components/ClassroomPortalView.jsx';
 import TaskDrawer from './components/TaskDrawer.jsx';
 import TaskModal from './components/TaskModal.jsx';
+import LoginScreen from './components/LoginScreen.jsx';
 
 export default function App() {
-  const { activeTab, setActiveTab, loading, error, chibiMode } = useProject();
+  const {
+    activeTab,
+    setActiveTab,
+    loading,
+    error,
+    chibiMode,
+    authUser,
+    login,
+    isLoginModalOpen,
+    setIsLoginModalOpen
+  } = useProject();
 
   if (loading) {
     return (
@@ -56,12 +68,15 @@ export default function App() {
         <Sidebar />
 
         <main className="main-canvas">
-          <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+          {activeTab !== 'classroom' && (
+            <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+          )}
 
           <div className="canvas-body">
             {(activeTab === 'kanban' || activeTab === 'table') && <KpiCards />}
 
             {/* Dynamic View rendering */}
+            {activeTab === 'classroom' && <ClassroomPortalView />}
             {activeTab === 'kanban' && <KanbanBoard />}
             {activeTab === 'table' && <TableView />}
             {activeTab === 'milestones' && <MilestonesView />}
@@ -73,6 +88,18 @@ export default function App() {
 
       <TaskDrawer />
       <TaskModal />
+
+      {/* Cửa sổ Đăng nhập hệ thống */}
+      {isLoginModalOpen && (
+        <LoginScreen
+          onLoginSuccess={(user) => {
+            login(user);
+            setIsLoginModalOpen(false);
+          }}
+          onClose={() => setIsLoginModalOpen(false)}
+          canClose={Boolean(authUser)}
+        />
+      )}
     </div>
   );
 }

@@ -14,6 +14,7 @@ export default function Header({ activeTab, setActiveTab }) {
     isLecturer,
     canCreateTask,
     setIsTaskModalOpen,
+    returnToClassroom,
     kpis,
     chibiMode
   } = useProject();
@@ -72,7 +73,19 @@ export default function Header({ activeTab, setActiveTab }) {
           <h2 id="project-title-heading">{projectTitle}</h2>
           <div className="project-meta-pills">
             <span className="meta-pill" id="pill-course-name">{courseName}</span>
-            <span className="meta-pill" id="pill-project-type">Loại: {projectType}</span>
+            <span
+              className="meta-pill"
+              id="pill-scale-badge"
+              style={{
+                background: project?.project?.quy_mo === 'ca_nhan' ? '#e0f2fe' : '#f3e8ff',
+                color: project?.project?.quy_mo === 'ca_nhan' ? '#0369a1' : '#6d28d9',
+                borderColor: project?.project?.quy_mo === 'ca_nhan' ? '#bae6fd' : '#e9d5ff',
+                fontWeight: 700
+              }}
+            >
+              {project?.project?.quy_mo === 'ca_nhan' ? '👤 Đề tài Cá nhân (1 SV)' : '👥 Đề tài Nhóm (2-3 SV)'}
+              {project?.team?.ten_nhom ? ` • ${project.team.ten_nhom}` : ''}
+            </span>
             <span className="meta-pill" id="pill-status-badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
               {chibiMode && (
                 <img src={CHIBI_ASSETS.logos.stampOnTrack} alt="On track" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
@@ -84,6 +97,19 @@ export default function Header({ activeTab, setActiveTab }) {
         </div>
 
         <div className="header-actions">
+          <button
+            className="btn btn-outline btn-sm"
+            onClick={returnToClassroom}
+            title="Quay lại Cổng Môn học (Lớp 21DTHC5)"
+            style={{
+              borderColor: '#3b82f6',
+              color: '#1d4ed8',
+              background: '#eff6ff',
+              fontWeight: 700
+            }}
+          >
+            <span>🏫 ← Về Cổng Môn học</span>
+          </button>
           {/* Scope Toggle: Hidden for Lecturer */}
           {!isLecturer && (
             <div id="scope-filter-toggle" style={{ display: 'inline-flex', gap: '4px' }}>

@@ -41,7 +41,7 @@ export default function TeamView() {
                   )}
                 </div>
                 <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  {instructor?.email || 'khuyenbp@huflit.edu.vn'} &bull; Khoa Công nghệ thông tin
+                  {instructor?.email || 'khuyenbp@gmail.com'} &bull; Khoa Công nghệ thông tin
                 </div>
                 <div className="hero-mentor-quote">
                   "Đồng hành, định hướng kiến trúc chuẩn hóa CSDL và theo sát tiến độ 10 tuần của nhóm sinh viên."

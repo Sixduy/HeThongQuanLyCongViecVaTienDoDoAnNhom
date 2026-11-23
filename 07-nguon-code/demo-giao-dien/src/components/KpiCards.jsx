@@ -1,13 +1,16 @@
 import React from 'react';
 import { useProject } from '../context/ProjectContext.jsx';
 import { CHIBI_ASSETS } from '../constants/chibiAssets.js';
+import { isTaskOverdue } from '../utils/formatters.js';
 
 export default function KpiCards() {
   const { filteredTasks, chibiMode } = useProject();
 
-  const inProgress = filteredTasks.filter(t => t.trang_thai === 'dang_lam').length;
-  const completed = filteredTasks.filter(t => t.trang_thai === 'hoan_thanh').length;
-  const overdue = filteredTasks.filter(t => t.trang_thai === 'tre_han').length;
+  const completed = filteredTasks.filter(t => t.trang_thai === 'hoan_thanh' || Number(t.phan_tram_tien_do) >= 100).length;
+  const overdue = filteredTasks.filter(t => isTaskOverdue(t)).length;
+  const inProgress = filteredTasks.filter(
+    t => (t.trang_thai === 'dang_lam' || (Number(t.phan_tram_tien_do) > 0 && Number(t.phan_tram_tien_do) < 100)) && !isTaskOverdue(t)
+  ).length;
 
   return (
     <div className="kpi-grid">
@@ -24,6 +27,10 @@ export default function KpiCards() {
               <img
                 src={CHIBI_ASSETS.characters.chiaTask}
                 alt="Tổng việc"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = CHIBI_ASSETS.icons.checklist;
+                }}
               />
             </div>
           )}
@@ -45,6 +52,10 @@ export default function KpiCards() {
               <img
                 src={CHIBI_ASSETS.characters.coding}
                 alt="Đang thực hiện"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = CHIBI_ASSETS.icons.progress;
+                }}
               />
             </div>
           )}
@@ -66,6 +77,10 @@ export default function KpiCards() {
               <img
                 src={CHIBI_ASSETS.characters.success}
                 alt="Hoàn thành"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = CHIBI_ASSETS.icons.done;
+                }}
               />
             </div>
           )}
@@ -87,6 +102,10 @@ export default function KpiCards() {
               <img
                 src={overdue > 0 ? CHIBI_ASSETS.characters.tieuChay : CHIBI_ASSETS.characters.success}
                 alt="Trễ hạn"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = CHIBI_ASSETS.icons.flame;
+                }}
               />
             </div>
           )}

@@ -8,7 +8,7 @@ export const mockDatabase = {
   nguoi_dung: [
     {
       ma_nguoi_dung: "u-gv-01",
-      email: "khuyenbp@huflit.edu.vn",
+      email: "khuyenbp@gmail.com",
       mat_khau_bam: "$2b$10$hashed_gv_pass_demo",
       ho_ten: "ThS. Bùi Phú Khuyên",
       vai_tro_he_thong: "giangvien",
@@ -17,7 +17,7 @@ export const mockDatabase = {
     },
     {
       ma_nguoi_dung: "u-sv-01",
-      email: "2180606023@huflit.edu.vn",
+      email: "2180606023@gmail.com",
       mat_khau_bam: "$2b$10$hashed_truc_pass_demo",
       ho_ten: "Đỗ Minh Trực",
       vai_tro_he_thong: "sinhvien",
@@ -26,7 +26,7 @@ export const mockDatabase = {
     },
     {
       ma_nguoi_dung: "u-sv-02",
-      email: "2280600494@huflit.edu.vn",
+      email: "2280600494@gmail.com",
       mat_khau_bam: "$2b$10$hashed_duy_pass_demo",
       ho_ten: "Trần Minh Duy",
       vai_tro_he_thong: "sinhvien",

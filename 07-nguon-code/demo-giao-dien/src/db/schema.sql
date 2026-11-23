@@ -1,5 +1,5 @@
 -- ==============================================================================
--- CƠ SỞ DỮ LIỆU SQLITE: HỆ THỐNG QUẢN LÝ CÔNG VIỆC VÀ TIẾN ĐỘ ĐỒ ÁN NHÓM
+-- CƠ SỞ DỮ LIỆU SQLITE: HỆ THỐNG QUẢN LÝ CÔNG VIỆC VÀ TIẾN ĐỘ ĐỒ ÁN MÔN HỌC
 -- Bám sát 100% 9 bảng vật lý đã chuẩn hóa tại 03-csdl/07-schema-sql-du-kien.md
 -- Toàn bộ tên bảng, tên cột dùng danh từ / cụm danh từ. Không thêm cột ngoài.
 -- ==============================================================================

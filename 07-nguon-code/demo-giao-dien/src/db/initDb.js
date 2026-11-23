@@ -22,7 +22,7 @@ const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 db.exec(schemaSql);
 console.log('[DB] Đã khởi tạo 9 bảng vật lý thành công.');
 
-// Kiểm tra xem đã có dữ liệu chưa
+// Kiểm tra xem đã có dữ liệu gốc chưa
 const userCount = db.prepare('SELECT COUNT(*) as count FROM nguoi_dung').get().count;
 
 if (userCount === 0) {
@@ -33,9 +33,9 @@ if (userCount === 0) {
     INSERT INTO nguoi_dung (ma_nguoi_dung, email, mat_khau_bam, ho_ten, vai_tro_he_thong, trang_thai_hoat_dong)
     VALUES (?, ?, ?, ?, ?, ?)
   `);
-  insertUser.run('u-gv-01', 'khuyenbp@huflit.edu.vn', '$2b$10$hashed_gv_pass_demo', 'ThS. Bùi Phú Khuyên', 'giangvien', 1);
-  insertUser.run('u-sv-01', '2180606023@huflit.edu.vn', '$2b$10$hashed_truc_pass_demo', 'Đỗ Minh Trực', 'sinhvien', 1);
-  insertUser.run('u-sv-02', '2280600494@huflit.edu.vn', '$2b$10$hashed_duy_pass_demo', 'Trần Minh Duy', 'sinhvien', 1);
+  insertUser.run('u-gv-01', 'khuyenbp@gmail.com', '$2b$10$hashed_gv_pass_demo', 'ThS. Bùi Phú Khuyên', 'giangvien', 1);
+  insertUser.run('u-sv-01', '2180606023@gmail.com', '$2b$10$hashed_truc_pass_demo', 'Đỗ Minh Trực', 'sinhvien', 1);
+  insertUser.run('u-sv-02', '2280600494@gmail.com', '$2b$10$hashed_duy_pass_demo', 'Trần Minh Duy', 'sinhvien', 1);
 
   // 2. DO_AN
   const insertProject = db.prepare(`
@@ -46,8 +46,8 @@ if (userCount === 0) {
     'da-dacs-01',
     'Hệ thống quản lý công việc và tiến độ đồ án môn học',
     'mon_hoc',
-    'Môn: Công nghệ phần mềm',
-    'Hệ thống web hỗ trợ sinh viên và giảng viên theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.',
+    'Môn: Công nghệ phần mềm • Lớp 21DTHC5',
+    '[NHÓM 2-3 SV] Hệ thống web hỗ trợ sinh viên và giảng viên theo dõi sát sao tiến độ công việc, mốc bàn giao và đánh giá minh bạch theo từng giai đoạn.',
     65.0,
     'dang_thuc_hien',
     'u-gv-01'
@@ -121,9 +121,150 @@ if (userCount === 0) {
   insertNotification.run('tb-02', 'u-sv-02', 'da-dacs-01', 'cv-09', 'canh_bao_tre_han', 'Cảnh báo: Công việc đã quá hạn chót', 'Công việc Rà soát biểu mẫu Word đã quá hạn ngày 14/10/2026.', 1);
 
   console.log('[DB] Đã nạp thành công dữ liệu khởi tạo vào 9 bảng SQLite!');
-} else {
-  console.log('[DB] CSDL đã tồn tại dữ liệu sẵn, không cần nạp lại.');
 }
+
+// ============================================================================
+// BỔ SUNG DỮ LIỆU MẪU LỚP HỌC PHẦN, NGÂN HÀNG ĐỀ TÀI (CÁ NHÂN & NHÓM)
+// Bảo toàn 100% lược đồ 9 bảng BCNF, dùng INSERT OR IGNORE để nâng cấp an toàn
+// ============================================================================
+function ensureClassroomTopicsSeeded() {
+  // Đảm bảo đề tài gốc da-dacs-01 có nhãn quy mô [NHÓM 2-3 SV]
+  db.prepare(`
+    UPDATE do_an
+    SET ten_mon_hoc = 'Môn: Công nghệ phần mềm • Lớp 21DTHC5',
+        noi_dung_muc_tieu = CASE
+          WHEN noi_dung_muc_tieu NOT LIKE '[%' THEN '[NHÓM 2-3 SV] ' || noi_dung_muc_tieu
+          ELSE noi_dung_muc_tieu
+        END
+    WHERE ma_do_an = 'da-dacs-01'
+  `).run();
+
+  // Thêm sinh viên trong lớp học phần 21DTHC5
+  const insertUserIgnore = db.prepare(`
+    INSERT OR IGNORE INTO nguoi_dung (ma_nguoi_dung, email, mat_khau_bam, ho_ten, vai_tro_he_thong, trang_thai_hoat_dong)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertUserIgnore.run('u-sv-03', '2280601102@gmail.com', '$2b$10$hashed_nam_pass', 'Lê Hoàng Nam', 'sinhvien', 1);
+  insertUserIgnore.run('u-sv-04', '2280601508@gmail.com', '$2b$10$hashed_nhu_pass', 'Phạm Quỳnh Như', 'sinhvien', 1);
+  insertUserIgnore.run('u-sv-05', '2280601899@gmail.com', '$2b$10$hashed_kiet_pass', 'Nguyễn Tuấn Kiệt', 'sinhvien', 1);
+
+  // Chuẩn hóa toàn bộ email tài khoản demo về @gmail.com nếu CSDL cũ đã tạo từ trước
+  db.prepare(`
+    UPDATE nguoi_dung
+    SET email = REPLACE(REPLACE(email, '@huflit.edu.vn', '@gmail.com'), '@hutech.edu.vn', '@gmail.com')
+    WHERE email LIKE '%@huflit.edu.vn' OR email LIKE '%@hutech.edu.vn'
+  `).run();
+
+  const insertProjectIgnore = db.prepare(`
+    INSERT OR IGNORE INTO do_an (ma_do_an, ten_do_an, loai_do_an, ten_mon_hoc, noi_dung_muc_tieu, tien_do_tong, trang_thai, ma_giang_vien)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  // Đề tài 2: Đề tài Cá nhân (1 người) đã có SV Lê Hoàng Nam nhận và đang làm
+  insertProjectIgnore.run(
+    'da-solo-01',
+    'Xây dựng module tra cứu điểm và thống kê lộ trình học tập cá nhân',
+    'mon_hoc',
+    'Môn: Công nghệ phần mềm • Lớp 21DTHC5',
+    '[CÁ NHÂN 1 SV] Ứng dụng web đơn trang (SPA) cho phép sinh viên tự theo dõi lộ trình học tập, tính điểm GPA tích lũy và cảnh báo học vụ cá nhân.',
+    50.0,
+    'dang_thuc_hien',
+    'u-gv-01'
+  );
+
+  db.prepare(`INSERT OR IGNORE INTO nhom (ma_nhom, ma_do_an, ten_nhom) VALUES (?, ?, ?)`).run(
+    'nhom-solo-01', 'da-solo-01', 'Cá nhân - Lê Hoàng Nam'
+  );
+
+  db.prepare(`
+    INSERT OR IGNORE INTO thanh_vien_nhom (ma_thanh_vien_nhom, ma_nhom, ma_nguoi_dung, vai_tro_trong_nhom)
+    VALUES (?, ?, ?, ?)
+  `).run('tvn-solo-01', 'nhom-solo-01', 'u-sv-03', 'nhom_truong');
+
+  // Mốc tiến độ và công việc cho đề tài cá nhân da-solo-01
+  const insertMsIgnore = db.prepare(`
+    INSERT OR IGNORE INTO moc_tien_do (ma_moc, ma_do_an, ten_moc, han_hoan_thanh, trang_thai, noi_dung_mo_ta)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertMsIgnore.run('moc-solo-01', 'da-solo-01', 'Mốc 1: Thiết kế cấu trúc dữ liệu điểm học phần & GPA', '2026-10-05', 'hoan_thanh', 'Hoàn thành công thức quy đổi thang điểm 10 sang thang điểm 4 và tín chỉ tích lũy.');
+  insertMsIgnore.run('moc-solo-02', 'da-solo-01', 'Mốc 2: Xây dựng giao diện biểu đồ học tập cá nhân', '2026-10-28', 'chua_hoan_thanh', 'Biểu đồ trực quan kết quả từng học kỳ và dự báo xếp loại học lực.');
+
+  const insertTaskIgnore = db.prepare(`
+    INSERT OR IGNORE INTO cong_viec (
+      ma_cong_viec, ma_do_an, ma_moc, tieu_de, noi_dung_mo_ta,
+      trang_thai, phan_tram_tien_do, trang_thai_khoa, han_chot,
+      ma_nguoi_thuc_hien, ma_nguoi_tao, ma_nguoi_khoa
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  insertTaskIgnore.run('cv-solo-01', 'da-solo-01', 'moc-solo-01', 'Viết hàm tính điểm trung bình tích lũy GPA hệ 4', 'Kiểm thử với bảng điểm mẫu 8 học kỳ của Khoa CNTT.', 'hoan_thanh', 100.0, 1, '2026-10-02', 'u-sv-03', 'u-gv-01', 'u-gv-01');
+  insertTaskIgnore.run('cv-solo-02', 'da-solo-01', 'moc-solo-02', 'Thiết kế giao diện Dashboard thống kê tín chỉ tự chọn', 'Hiển thị rõ số tín chỉ đã hoàn thành và số tín chỉ còn thiếu.', 'dang_lam', 50.0, 0, '2026-10-25', 'u-sv-03', 'u-sv-03', null);
+  insertTaskIgnore.run('cv-solo-03', 'da-solo-01', 'moc-solo-02', 'Tích hợp xuất bảng điểm cá nhân ra file PDF', 'Hỗ trợ sinh viên in bảng theo dõi kết quả học tập cá nhân.', 'can_lam', 0.0, 0, '2026-10-28', 'u-sv-03', 'u-sv-03', null);
+
+  // Đề tài 3: Đề tài Nhóm (2-3 SV) - ĐANG MỞ ĐĂNG KÝ (chưa có bản ghi trong bảng nhom)
+  insertProjectIgnore.run(
+    'da-open-01',
+    'Hệ thống quản lý phòng thí nghiệm và đăng ký mượn thiết bị IoT',
+    'mon_hoc',
+    'Môn: Công nghệ phần mềm • Lớp 21DTHC5',
+    '[NHÓM 2-3 SV] Xây dựng phần mềm quản lý danh mục thiết bị phần cứng, đặt lịch mượn trả phòng Lab và theo dõi tình trạng thiết bị cho Khoa CNTT.',
+    0.0,
+    'dang_thuc_hien',
+    'u-gv-01'
+  );
+  insertMsIgnore.run('moc-open1-01', 'da-open-01', 'Mốc 1: Khảo sát quy trình mượn trả thiết bị Lab & Đặc tả Use Case', '2026-10-10', 'chua_hoan_thanh', 'Xác định luồng duyệt phiếu mượn thiết bị giữa Sinh viên và Cán bộ quản lý phòng Lab.');
+  insertMsIgnore.run('moc-open1-02', 'da-open-01', 'Mốc 2: Thiết kế CSDL BCNF & Giao diện đặt lịch phòng Lab', '2026-10-28', 'chua_hoan_thanh', 'Thiết kế lược đồ CSDL quản lý tồn kho thiết bị và lịch mượn theo ca học.');
+  insertMsIgnore.run('moc-open1-03', 'da-open-01', 'Mốc 3: Lập trình MVP & Nghiệm thu đồ án môn học', '2026-11-18', 'chua_hoan_thanh', 'Hoàn thiện chức năng cảnh báo quá hạn trả thiết bị IoT.');
+
+  // Đề tài 4: Đề tài Cá nhân (1 SV) - ĐANG MỞ ĐĂNG KÝ (chưa có bản ghi trong bảng nhom)
+  insertProjectIgnore.run(
+    'da-open-02',
+    'Công cụ kiểm thử tự động RESTful API và xuất báo cáo Markdown',
+    'mon_hoc',
+    'Môn: Công nghệ phần mềm • Lớp 21DTHC5',
+    '[CÁ NHÂN 1 SV] Phát triển công cụ Web Dashboard gọn nhẹ giúp sinh viên tự động chạy kịch bản kiểm thử các Endpoint API của đồ án môn học và xuất báo cáo.',
+    0.0,
+    'dang_thuc_hien',
+    'u-gv-01'
+  );
+  insertMsIgnore.run('moc-open2-01', 'da-open-02', 'Mốc 1: Đặc tả cấu trúc kịch bản Test Case JSON & Parser', '2026-10-12', 'chua_hoan_thanh', 'Định nghĩa cú pháp kiểm thử request/response và mã trạng thái HTTP.');
+  insertMsIgnore.run('moc-open2-02', 'da-open-02', 'Mốc 2: Lập trình bộ chạy kiểm thử & Xuất báo cáo Markdown', '2026-11-05', 'chua_hoan_thanh', 'Tự động tổng hợp tỷ lệ Pass/Fail và thời gian phản hồi API.');
+
+  // Tạo và khởi tạo bảng Lớp học phần cho Giảng viên phụ trách môn học (GVPTMH)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lop_mon_hoc (
+      ma_lop TEXT PRIMARY KEY,
+      ten_lop TEXT NOT NULL,
+      ten_mon_hoc TEXT NOT NULL,
+      hoc_ky TEXT NOT NULL,
+      ma_giang_vien TEXT NOT NULL,
+      mo_ta TEXT,
+      thoi_gian_tao TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  const insertClass = db.prepare(`
+    INSERT OR IGNORE INTO lop_mon_hoc (ma_lop, ten_lop, ten_mon_hoc, hoc_ky, ma_giang_vien, mo_ta)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `);
+  insertClass.run(
+    '21DTHC5',
+    'Lớp 21DTHC5 - CNPM',
+    'Công nghệ phần mềm',
+    'Học kỳ 1 • 2026',
+    'u-gv-01',
+    'Lớp học phần chính thức của Giảng viên phụ trách môn học (GVPTMH) ThS. Bùi Phú Khuyên'
+  );
+  insertClass.run(
+    '22DTHE9',
+    'Lớp 22DTHE9 - CNPM',
+    'Công nghệ phần mềm',
+    'Học kỳ 1 • 2026',
+    'u-gv-01',
+    'Lớp học phần bổ trợ phân công thực hành đồ án'
+  );
+}
+
+ensureClassroomTopicsSeeded();
 
 export function getDb() {
   return db;

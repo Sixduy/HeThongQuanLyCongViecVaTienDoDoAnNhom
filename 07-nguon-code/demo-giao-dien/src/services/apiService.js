@@ -15,20 +15,58 @@ async function request(endpoint, options = {}) {
   };
 
   const response = await fetch(url, config);
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({ error: 'Lỗi không xác định' }));
-    throw new Error(err.error || `HTTP error ${response.status}`);
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : {};
+  } catch {
+    data = { error: `Máy chủ trả về phản hồi không hợp lệ (${response.status}).` };
   }
-  return response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || `HTTP error ${response.status}`);
+  }
+  return data;
 }
 
 export const apiService = {
-  getProject: () => request('/project'),
-  getUsers: () => request('/users'),
-  getMilestones: () => request('/milestones'),
-  
+  login: (email, matKhau) => request('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, mat_khau: matKhau })
+  }),
+
+  getClasses: () => request('/classes'),
+  createClass: (data) => request('/classes', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+
+  getProject: (projectId = 'da-dacs-01') => request(`/project?projectId=${encodeURIComponent(projectId)}`),
+  getUsers: (projectId = 'da-dacs-01') => request(`/users?projectId=${encodeURIComponent(projectId)}`),
+  getMilestones: (projectId = 'da-dacs-01') => request(`/milestones?projectId=${encodeURIComponent(projectId)}`),
+
+  getTopics: () => request('/topics'),
+  createTopic: (data) => request('/topics', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  registerSoloTopic: (topicId, userId) => request(`/topics/${encodeURIComponent(topicId)}/register-solo`, {
+    method: 'POST',
+    body: JSON.stringify({ userId })
+  }),
+  registerTeamTopic: (topicId, data) => request(`/topics/${encodeURIComponent(topicId)}/register-team`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  resetTopicRegistration: (topicId) => request(`/topics/${encodeURIComponent(topicId)}/reset`, {
+    method: 'POST'
+  }),
+
   getTasks: (params = {}) => {
     const query = new URLSearchParams();
+    if (params.projectId) {
+      query.append('projectId', params.projectId);
+    }
     if (params.milestoneId && params.milestoneId !== 'all') {
       query.append('milestoneId', params.milestoneId);
     }
@@ -69,7 +107,10 @@ export const apiService = {
     method: 'POST',
     body: JSON.stringify(data)
   }),
+  deleteAttachment: (fileId) => request(`/attachments/${encodeURIComponent(fileId)}`, {
+    method: 'DELETE'
+  }),
 
-  getTeam: () => request('/team'),
+  getTeam: (projectId = 'da-dacs-01') => request(`/team?projectId=${encodeURIComponent(projectId)}`),
   getNotifications: (userId) => request(`/notifications?userId=${encodeURIComponent(userId)}`)
 };

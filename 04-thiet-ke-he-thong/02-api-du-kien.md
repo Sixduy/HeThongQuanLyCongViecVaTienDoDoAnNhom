@@ -13,13 +13,14 @@ Base: `/api`
 - `PATCH /users/:id`
 - `PATCH /users/:id/active`
 
-## Projects & groups
-- `GET /projects`
-- `POST /projects`
-- `GET /projects/:id`
-- `PATCH /projects/:id`
-- `PUT /projects/:id/members`
-- `GET /projects/:id/dashboard`
+## Projects, Topics Bank & Groups (Lớp học phần & Phân nhóm)
+- `GET /project?projectId=:id` (Lấy thông tin đồ án và nhóm đang mở Workspace)
+- `GET /topics` (Lấy danh sách ngân hàng đề tài lớp học phần, quy mô Cá nhân 1 SV / Nhóm 2-3 SV và trạng thái đăng ký)
+- `POST /topics` (Giảng viên tạo đề tài mới trong lớp học phần)
+- `POST /topics/:id/register-solo` (Sinh viên nhận đề tài cá nhân 1 người về cho mình)
+- `POST /topics/:id/register-team` (Sinh viên tạo nhóm, đặt tên nhóm, chỉ định Nhóm trưởng, chọn thành viên và đăng ký đề tài nhóm)
+- `POST /topics/:id/reset` (Đặt lại trạng thái đề tài trống để phục vụ trình diễn demo)
+- `GET /team?projectId=:id` (Lấy danh sách thành viên và vai trò của nhóm hiện tại)
 
 ## Milestones
 - `GET /projects/:id/milestones`
