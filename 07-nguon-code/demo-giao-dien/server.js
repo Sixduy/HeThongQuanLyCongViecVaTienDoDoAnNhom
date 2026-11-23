@@ -227,6 +227,25 @@ const server = http.createServer(async (req, res) => {
       }
       const msCount = db.prepare(`SELECT COUNT(*) as cnt FROM moc_tien_do WHERE ma_do_an = ?`).get(p.ma_do_an).cnt;
       const taskCount = db.prepare(`SELECT COUNT(*) as cnt FROM cong_viec WHERE ma_do_an = ?`).get(p.ma_do_an).cnt;
+      const ghRow = db.prepare(`SELECT repo_url, repo_owner, repo_name, cached_payload_json, last_synced_at FROM lien_ket_github WHERE ma_do_an = ?`).get(p.ma_do_an);
+      let ghSummary = { connected: false };
+      if (ghRow) {
+        let cachedCommits = 0;
+        let lastPushAt = null;
+        try {
+          const parsedGh = ghRow.cached_payload_json ? JSON.parse(ghRow.cached_payload_json) : null;
+          cachedCommits = parsedGh?.commits?.length || 0;
+          lastPushAt = parsedGh?.commits?.[0]?.date || parsedGh?.repo?.pushedAt || null;
+        } catch {}
+        ghSummary = {
+          connected: true,
+          repo_url: ghRow.repo_url,
+          repo_slug: `${ghRow.repo_owner}/${ghRow.repo_name}`,
+          commit_count: cachedCommits,
+          last_pushed_at: lastPushAt,
+          last_synced_at: ghRow.last_synced_at
+        };
+      }
 
       return {
         ...p,
@@ -235,7 +254,8 @@ const server = http.createServer(async (req, res) => {
         da_dang_ky: Boolean(team),
         team: team ? { ...team, members } : null,
         so_moc: msCount,
-        so_cong_viec: taskCount
+        so_cong_viec: taskCount,
+        github_summary: ghSummary
       };
     });
 
@@ -805,6 +825,308 @@ const server = http.createServer(async (req, res) => {
       : `SELECT * FROM thong_bao ORDER BY thoi_gian_tao DESC`;
     const notifications = userId ? db.prepare(query).all(userId) : db.prepare(query).all();
     return sendJson(res, 200, notifications);
+  }
+
+  // ==========================================
+  // 14. GITHUB DASHBOARD INTEGRATION APIs
+  // ==========================================
+  function parseGithubRepoUrl(inputUrl = '') {
+    const trimmed = inputUrl.trim().replace(/\.git$/i, '').replace(/\/+$/, '');
+    const matchUrl = trimmed.match(/github\.com\/([^/\s]+)\/([^/\s]+)/i);
+    if (matchUrl) {
+      return { owner: matchUrl[1], repo: matchUrl[2], cleanUrl: `https://github.com/${matchUrl[1]}/${matchUrl[2]}` };
+    }
+    const matchSlug = trimmed.match(/^([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_.-]+)$/);
+    if (matchSlug) {
+      return { owner: matchSlug[1], repo: matchSlug[2], cleanUrl: `https://github.com/${matchSlug[1]}/${matchSlug[2]}` };
+    }
+    return null;
+  }
+
+  async function fetchGithubSnapshot(owner, repo, token = '') {
+    const headers = {
+      'User-Agent': 'DACS-Project-Tracker/1.0',
+      'Accept': 'application/vnd.github+json'
+    };
+    if (token && token.trim()) {
+      headers['Authorization'] = `Bearer ${token.trim()}`;
+    }
+
+    const ghFetch = async (url) => {
+      const r = await fetch(url, { headers });
+      if (!r.ok) {
+        const errBody = await r.json().catch(() => ({}));
+        const msg = errBody.message || `GitHub HTTP ${r.status}`;
+        if (r.status === 404) throw new Error(`Không tìm thấy Repository "${owner}/${repo}" (hoặc Repo ở chế độ Private cần Token).`);
+        if (r.status === 403 && /rate limit/i.test(msg)) throw new Error('Đã chạm giới hạn truy vấn miễn phí của GitHub API (60 req/giờ). Hãy gắn Personal Access Token hoặc dùng dữ liệu cache.');
+        throw new Error(`Lỗi GitHub API: ${msg}`);
+      }
+      return r.json();
+    };
+
+    const [repoInfo, commitsRaw, contributorsRaw, branchesRaw, pullsRaw] = await Promise.all([
+      ghFetch(`https://api.github.com/repos/${owner}/${repo}`),
+      ghFetch(`https://api.github.com/repos/${owner}/${repo}/commits?per_page=35`),
+      ghFetch(`https://api.github.com/repos/${owner}/${repo}/contributors?per_page=30`).catch(() => []),
+      ghFetch(`https://api.github.com/repos/${owner}/${repo}/branches?per_page=20`).catch(() => []),
+      ghFetch(`https://api.github.com/repos/${owner}/${repo}/pulls?state=all&per_page=15`).catch(() => [])
+    ]);
+
+    return {
+      repo: {
+        fullName: repoInfo.full_name,
+        description: repoInfo.description || '',
+        htmlUrl: repoInfo.html_url,
+        defaultBranch: repoInfo.default_branch,
+        stars: repoInfo.stargazers_count || 0,
+        forks: repoInfo.forks_count || 0,
+        openIssues: repoInfo.open_issues_count || 0,
+        visibility: repoInfo.private ? 'private' : 'public',
+        pushedAt: repoInfo.pushed_at,
+        updatedAt: repoInfo.updated_at
+      },
+      commits: (Array.isArray(commitsRaw) ? commitsRaw : []).map(c => ({
+        sha: c.sha,
+        shortSha: (c.sha || '').slice(0, 7),
+        message: c.commit?.message || '',
+        authorLogin: c.author?.login || c.committer?.login || null,
+        authorName: c.commit?.author?.name || c.author?.login || 'Unknown',
+        authorEmail: c.commit?.author?.email || '',
+        authorAvatar: c.author?.avatar_url || null,
+        date: c.commit?.author?.date || c.commit?.committer?.date || null,
+        htmlUrl: c.html_url
+      })),
+      contributors: (Array.isArray(contributorsRaw) ? contributorsRaw : []).map(ct => ({
+        login: ct.login,
+        avatarUrl: ct.avatar_url,
+        htmlUrl: ct.html_url,
+        contributions: ct.contributions || 0
+      })),
+      branches: (Array.isArray(branchesRaw) ? branchesRaw : []).map(b => ({
+        name: b.name,
+        protected: Boolean(b.protected)
+      })),
+      pulls: (Array.isArray(pullsRaw) ? pullsRaw : []).map(pr => ({
+        number: pr.number,
+        title: pr.title,
+        state: pr.merged_at ? 'merged' : pr.state,
+        userLogin: pr.user?.login || '',
+        createdAt: pr.created_at,
+        mergedAt: pr.merged_at,
+        htmlUrl: pr.html_url
+      }))
+    };
+  }
+
+  function buildGithubDashboardResponse(linkRow, projectId) {
+    if (!linkRow) {
+      return { connected: false, config: null, dashboard: null };
+    }
+
+    let mapping = {};
+    try { mapping = JSON.parse(linkRow.member_mapping_json || '{}'); } catch {}
+
+    let payload = null;
+    try { payload = linkRow.cached_payload_json ? JSON.parse(linkRow.cached_payload_json) : null; } catch {}
+
+    // Lấy danh sách thành viên trong nhóm của dự án
+    const team = db.prepare(`SELECT * FROM nhom WHERE ma_do_an = ?`).get(projectId);
+    const members = team
+      ? db.prepare(`
+          SELECT tv.vai_tro_trong_nhom, u.ma_nguoi_dung, u.ho_ten, u.email
+          FROM thanh_vien_nhom tv
+          JOIN nguoi_dung u ON tv.ma_nguoi_dung = u.ma_nguoi_dung
+          WHERE tv.ma_nhom = ?
+          ORDER BY CASE WHEN tv.vai_tro_trong_nhom = 'nhom_truong' THEN 0 ELSE 1 END
+        `).all(team.ma_nhom)
+      : [];
+
+    // Reverse lookup: githubLogin (lowercase) -> member
+    const loginToMember = {};
+    const emailToMember = {};
+    members.forEach(m => {
+      if (m.email) emailToMember[m.email.toLowerCase()] = m;
+      const mappedLogin = mapping[m.ma_nguoi_dung];
+      if (mappedLogin && mappedLogin.trim()) {
+        loginToMember[mappedLogin.trim().toLowerCase()] = m;
+      }
+    });
+
+    const commits = (payload?.commits || []).map(c => {
+      const loginKey = (c.authorLogin || '').toLowerCase();
+      const emailKey = (c.authorEmail || '').toLowerCase();
+      const matched = loginToMember[loginKey] || emailToMember[emailKey] || null;
+      return {
+        ...c,
+        mappedUserId: matched?.ma_nguoi_dung || null,
+        mappedUserName: matched?.ho_ten || null
+      };
+    });
+
+    // Thống kê theo từng thành viên nhóm
+    const totalRecentCommits = commits.length;
+    const memberStats = members.map(m => {
+      const myCommits = commits.filter(c => c.mappedUserId === m.ma_nguoi_dung);
+      const ghLogin = mapping[m.ma_nguoi_dung] || '';
+      const contributorRecord = (payload?.contributors || []).find(
+        ct => ghLogin && ct.login.toLowerCase() === ghLogin.toLowerCase()
+      );
+      return {
+        ma_nguoi_dung: m.ma_nguoi_dung,
+        ho_ten: m.ho_ten,
+        email: m.email,
+        vai_tro_trong_nhom: m.vai_tro_trong_nhom,
+        github_username: ghLogin,
+        recentCommitCount: myCommits.length,
+        totalContributions: contributorRecord?.contributions ?? myCommits.length,
+        sharePercent: totalRecentCommits > 0 ? Math.round((myCommits.length / totalRecentCommits) * 100) : 0,
+        latestCommit: myCommits[0] || null,
+        avatarUrl: contributorRecord?.avatarUrl || myCommits[0]?.authorAvatar || null
+      };
+    });
+
+    return {
+      connected: true,
+      config: {
+        ma_do_an: linkRow.ma_do_an,
+        repo_url: linkRow.repo_url,
+        repo_owner: linkRow.repo_owner,
+        repo_name: linkRow.repo_name,
+        default_branch: linkRow.default_branch,
+        hasToken: Boolean(linkRow.access_token),
+        member_mapping: mapping,
+        last_synced_at: linkRow.last_synced_at
+      },
+      dashboard: payload ? {
+        ...payload,
+        commits,
+        memberStats
+      } : null
+    };
+  }
+
+  // 14A. GET /api/github/dashboard?projectId=...
+  if (method === 'GET' && (pathname === 'api/github/dashboard' || pathname === '/api/github/dashboard')) {
+    const projectId = parsedUrl.searchParams.get('projectId') || 'da-dacs-01';
+    let linkRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+    if (!linkRow) {
+      return sendJson(res, 200, { connected: false, config: null, dashboard: null });
+    }
+    // Nếu mới seed chưa có cache thì tự đồng bộ lần đầu (không làm lỗi nếu offline)
+    if (!linkRow.cached_payload_json) {
+      try {
+        const snapshot = await fetchGithubSnapshot(linkRow.repo_owner, linkRow.repo_name, linkRow.access_token || '');
+        const nowIso = new Date().toISOString();
+        db.prepare(`
+          UPDATE lien_ket_github
+          SET cached_payload_json = ?, default_branch = ?, last_synced_at = ?
+          WHERE ma_do_an = ?
+        `).run(JSON.stringify(snapshot), snapshot.repo.defaultBranch || linkRow.default_branch, nowIso, projectId);
+        linkRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      } catch (err) {
+        const resp = buildGithubDashboardResponse(linkRow, projectId);
+        resp.syncWarning = err.message;
+        return sendJson(res, 200, resp);
+      }
+    }
+    return sendJson(res, 200, buildGithubDashboardResponse(linkRow, projectId));
+  }
+
+  // 14B. POST /api/github/connect (Kết nối / đổi repo GitHub cho đồ án)
+  if (method === 'POST' && (pathname === 'api/github/connect' || pathname === '/api/github/connect')) {
+    try {
+      const data = await parseBody(req);
+      const projectId = data.projectId || 'da-dacs-01';
+      const parsed = parseGithubRepoUrl(data.repoUrl || '');
+      if (!parsed) {
+        return sendJson(res, 400, { error: 'URL Repository GitHub không hợp lệ. Ví dụ đúng: https://github.com/owner/repo' });
+      }
+
+      const existing = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      const tokenToUse = data.accessToken !== undefined ? (data.accessToken || '').trim() : (existing?.access_token || '');
+      const mappingJson = data.memberMapping
+        ? JSON.stringify(data.memberMapping)
+        : (existing?.member_mapping_json || '{}');
+
+      // Gọi GitHub API ngay để xác nhận repo tồn tại và lấy snapshot
+      const snapshot = await fetchGithubSnapshot(parsed.owner, parsed.repo, tokenToUse);
+      const nowIso = new Date().toISOString();
+
+      if (existing) {
+        db.prepare(`
+          UPDATE lien_ket_github
+          SET repo_url = ?, repo_owner = ?, repo_name = ?, default_branch = ?,
+              access_token = ?, member_mapping_json = ?, cached_payload_json = ?, last_synced_at = ?
+          WHERE ma_do_an = ?
+        `).run(
+          parsed.cleanUrl, parsed.owner, parsed.repo, snapshot.repo.defaultBranch || 'main',
+          tokenToUse || null, mappingJson, JSON.stringify(snapshot), nowIso, projectId
+        );
+      } else {
+        db.prepare(`
+          INSERT INTO lien_ket_github (
+            ma_lien_ket, ma_do_an, repo_url, repo_owner, repo_name, default_branch,
+            access_token, member_mapping_json, cached_payload_json, last_synced_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).run(
+          `gh-${Date.now()}`, projectId, parsed.cleanUrl, parsed.owner, parsed.repo,
+          snapshot.repo.defaultBranch || 'main', tokenToUse || null, mappingJson, JSON.stringify(snapshot), nowIso
+        );
+      }
+
+      const updatedRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      return sendJson(res, 200, buildGithubDashboardResponse(updatedRow, projectId));
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message });
+    }
+  }
+
+  // 14C. POST /api/github/sync?projectId=... (Đồng bộ dữ liệu mới nhất từ GitHub)
+  if (method === 'POST' && (pathname === 'api/github/sync' || pathname === '/api/github/sync')) {
+    try {
+      const projectId = parsedUrl.searchParams.get('projectId') || 'da-dacs-01';
+      const linkRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      if (!linkRow) {
+        return sendJson(res, 404, { error: 'Dự án này chưa kết nối Repository GitHub.' });
+      }
+      const snapshot = await fetchGithubSnapshot(linkRow.repo_owner, linkRow.repo_name, linkRow.access_token || '');
+      const nowIso = new Date().toISOString();
+      db.prepare(`
+        UPDATE lien_ket_github
+        SET cached_payload_json = ?, default_branch = ?, last_synced_at = ?
+        WHERE ma_do_an = ?
+      `).run(JSON.stringify(snapshot), snapshot.repo.defaultBranch || linkRow.default_branch, nowIso, projectId);
+      const updatedRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      return sendJson(res, 200, buildGithubDashboardResponse(updatedRow, projectId));
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message });
+    }
+  }
+
+  // 14D. POST /api/github/mapping (Gắn GitHub username cho từng thành viên trong nhóm)
+  if (method === 'POST' && (pathname === 'api/github/mapping' || pathname === '/api/github/mapping')) {
+    try {
+      const data = await parseBody(req);
+      const projectId = data.projectId || 'da-dacs-01';
+      const linkRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      if (!linkRow) {
+        return sendJson(res, 404, { error: 'Dự án này chưa kết nối Repository GitHub.' });
+      }
+      db.prepare(`UPDATE lien_ket_github SET member_mapping_json = ? WHERE ma_do_an = ?`).run(
+        JSON.stringify(data.mapping || {}), projectId
+      );
+      const updatedRow = db.prepare(`SELECT * FROM lien_ket_github WHERE ma_do_an = ?`).get(projectId);
+      return sendJson(res, 200, buildGithubDashboardResponse(updatedRow, projectId));
+    } catch (err) {
+      return sendJson(res, 400, { error: err.message });
+    }
+  }
+
+  // 14E. DELETE /api/github/connect?projectId=... (Ngắt kết nối repo)
+  if (method === 'DELETE' && (pathname === 'api/github/connect' || pathname === '/api/github/connect')) {
+    const projectId = parsedUrl.searchParams.get('projectId') || 'da-dacs-01';
+    db.prepare(`DELETE FROM lien_ket_github WHERE ma_do_an = ?`).run(projectId);
+    return sendJson(res, 200, { success: true });
   }
 
   // ==========================================

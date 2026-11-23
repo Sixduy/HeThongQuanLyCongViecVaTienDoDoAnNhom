@@ -24,17 +24,17 @@ export default function ClassroomPortalView() {
     resetTopicRegistration
   } = useProject();
 
-  // Tab con của GVPTMH: 'topics' (Ngân hàng đề tài) | 'groups' (Danh sách nhóm & tiến độ) | 'roster' (Sĩ số SV)
-  const [lecturerSubTab, setLecturerSubTab] = useState('topics');
-
-  // Tab con của Sinh viên: 'my' (Đề tài của tôi / Đăng ký) | 'bank' (Ngân hàng đề tài tham khảo)
-  const [studentSubTab, setStudentSubTab] = useState('my');
+  // Tab con của GVPTMH: mặc định 'groups' để nhìn tổng quan tiến độ toàn lớp ngay
+  const [lecturerSubTab, setLecturerSubTab] = useState('groups');
+  const [rosterFilter, setRosterFilter] = useState('all'); // 'all' | 'unassigned'
+  const [studentTopicFilter, setStudentTopicFilter] = useState('all'); // 'all' | 'open' | 'taken'
 
   // Modals
   const [isCreateClassModalOpen, setIsCreateClassModalOpen] = useState(false);
   const [isCreateTopicModalOpen, setIsCreateTopicModalOpen] = useState(false);
   const [teamModalTopic, setTeamModalTopic] = useState(null);
   const [soloConfirmTopic, setSoloConfirmTopic] = useState(null);
+  const [detailTopicModal, setDetailTopicModal] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   // Form tạo lớp mới
@@ -371,524 +371,438 @@ export default function ClassroomPortalView() {
     <div className="classroom-portal-container" style={{ display: 'flex', flexDirection: 'column', gap: '22px', paddingBottom: '36px' }}>
 
       {/* =====================================================================
-          1. HEADER BANNER CỔNG MÔN HỌC (CHUẨN TASTESKILL V2 / LINEAR NỀN SÁNG)
+          1. HEADER BANNER TINH GỌN (CHUẨN TASTESKILL V2 / LINEAR NỀN SÁNG)
          ===================================================================== */}
       <div
+        data-tour-id="tour-class-selector"
         style={{
           background: 'var(--surface-raised)',
           border: '1px solid var(--border)',
           borderTop: '3px solid #2563eb',
-          borderRadius: '14px',
-          padding: '22px 24px',
-          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.04)',
+          borderRadius: '12px',
+          padding: '16px 22px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.03)',
           display: 'flex',
-          flexDirection: 'column',
-          gap: '16px'
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: '14px'
         }}
       >
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flex: '1 1 480px' }}>
-            {chibiMode && (
-              <img
-                src={isLecturer ? CHIBI_ASSETS.characters.gvReview : (hasEnrolledProject ? CHIBI_ASSETS.characters.coding : CHIBI_ASSETS.characters.chiaTask)}
-                alt="Portal Mascot"
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  objectFit: 'contain',
-                  background: '#eff6ff',
-                  borderRadius: '12px',
-                  padding: '6px',
-                  border: '1px solid #bfdbfe'
-                }}
-              />
-            )}
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
-                <span
-                  style={{
-                    background: '#eff6ff',
-                    color: '#1d4ed8',
-                    border: '1px solid #bfdbfe',
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    padding: '2.5px 10px',
-                    borderRadius: 'var(--radius-pill)',
-                    letterSpacing: '0.4px'
-                  }}
-                >
-                  {isLecturer ? 'GIẢNG VIÊN PHỤ TRÁCH MÔN HỌC (GVPTMH)' : 'CỔNG SINH VIÊN ĐỒ ÁN MÔN HỌC'}
-                </span>
-                <span
-                  style={{
-                    background: '#f4f4f5',
-                    color: '#52525b',
-                    border: '1px solid #e4e4e7',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    padding: '2.5px 9px',
-                    borderRadius: 'var(--radius-pill)'
-                  }}
-                >
-                  {currentClassInfo.ten_mon_hoc} &bull; {currentClassInfo.ten_lop}
-                </span>
-                <span
-                  style={{
-                    background: '#f0fdf4',
-                    color: '#15803d',
-                    border: '1px solid #bbf7d0',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    padding: '2.5px 9px',
-                    borderRadius: 'var(--radius-pill)'
-                  }}
-                >
-                  GVHD: ThS. Bùi Phú Khuyên
-                </span>
-              </div>
-              <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.2px' }}>
-                {isLecturer
-                  ? `Bảng điều khiển GVPTMH — ${currentClassInfo.ten_lop}`
-                  : `Cổng Thông tin Sinh viên — ${currentClassInfo.ten_mon_hoc}`}
-              </h2>
-              <p style={{ margin: '5px 0 0', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                {isLecturer
-                  ? 'Quản lý các lớp môn học, chuẩn bị ngân hàng đề tài (cá nhân/nhóm) và theo dõi tình hình phân nhóm trước khi đi vào quản lý chi tiết từng nhóm.'
-                  : (hasEnrolledProject
-                    ? `Chào ${currentUser?.ho_ten}! Bạn đã tham gia đề tài của môn học. Bạn có thể xem trạng thái bên dưới và bấm nút để vào bảng việc Kanban.`
-                    : `Chào ${currentUser?.ho_ten}! Bạn hiện chưa có đề tài. Hãy chọn làm đề tài cá nhân (1 người) hoặc lập nhóm (2-3 người) bên dưới.`)}
-              </p>
-            </div>
-          </div>
-
-          {/* Chọn Lớp môn học & Nút tạo Lớp (Dành cho GVPTMH) */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
-            <div
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+          {chibiMode && (
+            <img
+              src={isLecturer ? CHIBI_ASSETS.characters.gvReview : (hasEnrolledProject ? CHIBI_ASSETS.characters.coding : CHIBI_ASSETS.characters.chiaTask)}
+              alt="Portal Mascot"
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                background: 'var(--surface-subtle)',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                border: '1px solid var(--border)'
+                width: '48px',
+                height: '48px',
+                objectFit: 'contain',
+                background: '#eff6ff',
+                borderRadius: '10px',
+                padding: '4px',
+                border: '1px solid #bfdbfe',
+                flexShrink: 0
               }}
-            >
-              <span style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>Lớp đang chọn:</span>
-              <select
-                value={activeClassId}
-                onChange={e => setActiveClassId(e.target.value)}
-                style={{
-                  background: 'var(--surface-raised)',
-                  color: 'var(--text)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '6px',
-                  padding: '5px 10px',
-                  fontSize: '12.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
-              >
-                {classes.map(c => (
-                  <option key={c.ma_lop} value={c.ma_lop}>
-                    {c.ten_lop} ({c.hoc_ky})
-                  </option>
-                ))}
-              </select>
-
-              {isLecturer && (
-                <button
-                  className="btn btn-outline btn-sm"
-                  onClick={() => setIsCreateClassModalOpen(true)}
-                  style={{
-                    color: '#2563eb',
-                    borderColor: '#93c5fd',
-                    background: '#eff6ff',
-                    fontSize: '11.5px',
-                    padding: '5px 10px',
-                    fontWeight: 700
-                  }}
-                  title="Tạo thêm Lớp môn học mới"
-                >
-                  + Tạo Lớp mới
-                </button>
-              )}
+            />
+          )}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '10.5px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>
+                {isLecturer ? 'GVPTMH' : 'SINH VIÊN'}
+              </span>
+              <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text)', letterSpacing: '-0.2px' }}>
+                {currentClassInfo.ten_lop}
+              </h2>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                &bull; {currentClassInfo.ten_mon_hoc} &bull; {currentClassInfo.hoc_ky}
+              </span>
             </div>
-
-            <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-              Học kỳ: <strong style={{ color: 'var(--text)' }}>{currentClassInfo.hoc_ky}</strong> &bull; Sĩ số: <strong style={{ color: 'var(--text)' }}>{students.length} sinh viên</strong>
+            <div style={{ fontSize: '12px', color: 'var(--text-subtle)', marginTop: '3px' }}>
+              GVHD: <strong style={{ color: 'var(--text)' }}>ThS. Bùi Phú Khuyên</strong> &bull; Sĩ số: <strong style={{ color: 'var(--text)' }}>{students.length} SV</strong>
             </div>
           </div>
+        </div>
+
+        {/* Chọn Lớp môn học & Tạo Lớp mới */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <select
+            value={activeClassId}
+            onChange={e => setActiveClassId(e.target.value)}
+            style={{
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
+              borderRadius: '8px',
+              padding: '6px 10px',
+              fontSize: '12.5px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            {classes.map(c => (
+              <option key={c.ma_lop} value={c.ma_lop}>
+                {c.ten_lop} ({c.hoc_ky})
+              </option>
+            ))}
+          </select>
+
+          {isLecturer && (
+            <button
+              className="btn btn-outline btn-sm"
+              onClick={() => setIsCreateClassModalOpen(true)}
+              style={{ color: '#2563eb', borderColor: '#93c5fd', background: '#eff6ff', fontWeight: 700 }}
+            >
+              + Tạo Lớp
+            </button>
+          )}
         </div>
       </div>
 
       {/* =====================================================================
-          2. NỘI DUNG CHÍNH: PHÂN BIỆT RÕ RÀNG GIỮA GV VÀ SINH VIÊN
+          2. NỘI DUNG CHÍNH: TỐI GIẢN & DỄ QUÉT CHO CẢ GV VÀ SV
          ===================================================================== */}
 
       {isLecturer ? (
         /* -------------------------------------------------------------------
-           A. GIAO DIỆN GIẢNG VIÊN PHỤ TRÁCH MÔN HỌC (GVPTMH)
+           A. GIAO DIỆN GIẢNG VIÊN: 1 HÀNG KPI GỌN + 3 TAB BẢNG TỔNG QUAN
            ------------------------------------------------------------------- */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
 
-          {/* Thống kê cấp độ môn học */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '14px' }}>
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', borderTop: '3px solid #2563eb' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Ngân hàng Đề tài Môn học</div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: 'var(--text)', margin: '4px 0' }}>{topics.length}</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-                {topics.filter(t => t.quy_mo === 'nhom').length} đề tài nhóm &bull; {topics.filter(t => t.quy_mo === 'ca_nhan').length} đề tài cá nhân
+          {/* 1 hàng 4 KPI tóm tắt siêu gọn */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(140px, 1fr))', gap: '12px' }}>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>Tổng đề tài</div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#1d4ed8' }}>{topics.length}</div>
               </div>
+              <span style={{ fontSize: '20px' }}>📚</span>
             </div>
 
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', borderTop: '3px solid #16a34a' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Nhóm Đồ án Đã Thành Lập</div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: '#15803d', margin: '4px 0' }}>{registeredGroups.length}</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-                Đã kích hoạt Workspace quản lý tiến độ
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>Nhóm đang làm</div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#15803d' }}>{registeredGroups.length}</div>
               </div>
+              <span style={{ fontSize: '20px' }}>👥</span>
             </div>
 
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', borderTop: '3px solid #d97706' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Đề tài Còn trống Chờ chọn</div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: '#b45309', margin: '4px 0' }}>{openTopics.length}</div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-                Sẵn sàng cho sinh viên đăng ký
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>Còn trống</div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#b45309' }}>{openTopics.length}</div>
               </div>
+              <span style={{ fontSize: '20px' }}>🟢</span>
             </div>
 
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '14px 18px', borderTop: '3px solid #7c3aed' }}>
-              <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: 600 }}>Sĩ số SV Đã có Nhóm</div>
-              <div style={{ fontSize: '26px', fontWeight: 800, color: '#6d28d9', margin: '4px 0' }}>
-                {students.filter(s => s.da_co_nhom).length}/{students.length}
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', fontWeight: 600 }}>SV đã có nhóm</div>
+                <div style={{ fontSize: '22px', fontWeight: 800, color: '#6d28d9' }}>
+                  {students.filter(s => s.da_co_nhom).length}/{students.length}
+                </div>
               </div>
-              <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-                {students.filter(s => !s.da_co_nhom).length} sinh viên đang chờ ghép nhóm
-              </div>
+              <span style={{ fontSize: '20px' }}>🎓</span>
             </div>
           </div>
 
-          {/* Thanh chuyển mạch 3 Tab của GVPTMH */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', background: 'var(--surface)', padding: '10px 16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {/* Thanh 3 Tab gọn của Giảng viên */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px', background: 'var(--surface)', padding: '8px 14px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+              <button
+                className={`tab-btn ${lecturerSubTab === 'groups' ? 'active' : ''}`}
+                data-tour-id="tour-gv-groups-tab"
+                onClick={() => setLecturerSubTab('groups')}
+                style={{ padding: '6px 12px', fontSize: '12.5px', fontWeight: 700 }}
+              >
+                👥 1. Tổng quan Nhóm ({registeredGroups.length})
+              </button>
               <button
                 className={`tab-btn ${lecturerSubTab === 'topics' ? 'active' : ''}`}
                 onClick={() => setLecturerSubTab('topics')}
-                style={{ padding: '7px 14px', fontSize: '13px', fontWeight: 700 }}
+                style={{ padding: '6px 12px', fontSize: '12.5px', fontWeight: 700 }}
               >
-                📚 1. Ngân hàng Đề tài ({topics.length})
-              </button>
-              <button
-                className={`tab-btn ${lecturerSubTab === 'groups' ? 'active' : ''}`}
-                onClick={() => setLecturerSubTab('groups')}
-                style={{ padding: '7px 14px', fontSize: '13px', fontWeight: 700 }}
-              >
-                👥 2. Các Nhóm Đồ án & Bảng Tiến độ ({registeredGroups.length})
+                📚 2. Ngân hàng Đề tài ({topics.length})
               </button>
               <button
                 className={`tab-btn ${lecturerSubTab === 'roster' ? 'active' : ''}`}
                 onClick={() => setLecturerSubTab('roster')}
-                style={{ padding: '7px 14px', fontSize: '13px', fontWeight: 700 }}
+                style={{ padding: '6px 12px', fontSize: '12.5px', fontWeight: 700 }}
               >
-                🎓 3. Sĩ số Sinh viên Lớp ({students.length})
+                🎓 3. Sinh viên Lớp ({students.length})
               </button>
             </div>
 
-            {lecturerSubTab === 'topics' && (
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={() => setIsCreateTopicModalOpen(true)}
-                style={{ fontWeight: 700, padding: '7px 14px' }}
-              >
-                <span>+ Thêm Đề tài vào Ngân hàng</span>
-              </button>
-            )}
+            <button
+              className="btn btn-primary btn-sm"
+              data-tour-id="tour-gv-add-topics"
+              onClick={() => setIsCreateTopicModalOpen(true)}
+              style={{ fontWeight: 700, padding: '6px 12px' }}
+            >
+              <span>+ Thêm Đề tài</span>
+            </button>
           </div>
 
-          {/* Tab 1: Ngân hàng đề tài của GVPTMH */}
-          {lecturerSubTab === 'topics' && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))', gap: '16px' }}>
-              {topics.map(topic => (
-                <div
-                  key={topic.ma_do_an}
-                  className="topic-card"
-                  style={{
-                    background: 'var(--surface)',
-                    border: '1px solid var(--border)',
-                    borderRadius: '12px',
-                    padding: '18px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '14px',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.03)'
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-                      <span
-                        style={{
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          padding: '2px 8px',
-                          borderRadius: '999px',
-                          background: topic.quy_mo === 'ca_nhan' ? '#e0f2fe' : '#f3e8ff',
-                          color: topic.quy_mo === 'ca_nhan' ? '#0369a1' : '#6d28d9',
-                          border: topic.quy_mo === 'ca_nhan' ? '1px solid #bae6fd' : '1px solid #e9d5ff',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                      >
-                        <img
-                          src={topic.quy_mo === 'ca_nhan' ? CHIBI_ASSETS.characters.coding : CHIBI_ASSETS.characters.chiaTask}
-                          alt="Scale"
-                          style={{ width: '15px', height: '15px', objectFit: 'contain' }}
-                        />
-                        {topic.quy_mo === 'ca_nhan' ? 'Cá nhân (1 SV)' : 'Nhóm (2-3 SV)'}
-                      </span>
-
-                      {topic.da_dang_ky ? (
-                        <span
-                          style={{
-                            background: '#dcfce7',
-                            color: '#15803d',
-                            border: '1px solid #bbf7d0',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '999px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          <img src={CHIBI_ASSETS.icons.done} alt="Done" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                          Đã có nhóm nhận ({topic.team?.ten_nhom})
-                        </span>
-                      ) : (
-                        <span
-                          style={{
-                            background: '#fef3c7',
-                            color: '#b45309',
-                            border: '1px solid #fde68a',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            padding: '2px 8px',
-                            borderRadius: '999px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px'
-                          }}
-                        >
-                          <img src={CHIBI_ASSETS.icons.flag} alt="Open" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                          Chờ sinh viên chọn
-                        </span>
-                      )}
-                    </div>
-
-                    <h4 style={{ margin: '0 0 6px 0', fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                      {topic.ten_do_an}
-                    </h4>
-                    <p style={{ margin: 0, fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: 1.5 }}>
-                      {topic.mo_ta_sach}
-                    </p>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px dashed var(--border)', fontSize: '11.5px', color: 'var(--text-subtle)' }}>
-                    <span>🚩 {topic.so_moc} mốc bàn giao</span>
-                    {topic.da_dang_ky ? (
-                      <button
-                        className="btn btn-outline btn-sm"
-                        onClick={() => enterWorkspace(topic.ma_do_an)}
-                        style={{ borderColor: '#2563eb', color: '#1d4ed8', fontWeight: 600 }}
-                      >
-                        Vào xem Kanban ({topic.tien_do_tong}%) →
-                      </button>
-                    ) : (
-                      <span style={{ fontStyle: 'italic', color: '#b45309' }}>Sẵn sàng mở đăng ký</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tab 2: Các Nhóm Đồ án & Bảng Tiến độ của GVPTMH */}
+          {/* TAB 1 (Mặc định): BẢNG TỔNG QUAN TIẾN ĐỘ CÁC NHÓM — NHÌN 1 PHÁT THẤY HẾT */}
           {lecturerSubTab === 'groups' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                Dưới đây là các Nhóm đồ án và Đề tài cá nhân đã được đăng ký trong lớp <strong>{currentClassInfo.ten_lop}</strong>.
-                Bấm vào <strong>"Đi vào Không gian Quản lý Tiến độ"</strong> của nhóm nào để duyệt mốc, xem Kanban và khóa tiến độ của nhóm đó:
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(420px, 1fr))', gap: '16px' }}>
-                {registeredGroups.map(group => {
-                  const leader = group.team?.members?.find(m => m.vai_tro_trong_nhom === 'nhom_truong');
-                  const isSolo = group.quy_mo === 'ca_nhan';
-
-                  return (
-                    <div
-                      key={group.ma_do_an}
-                      style={{
-                        background: 'var(--surface)',
-                        border: '1.5px solid var(--border)',
-                        borderRadius: '14px',
-                        padding: '18px 20px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: '14px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.03)'
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                        <div>
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              background: isSolo ? '#e0f2fe' : '#f3e8ff',
-                              color: isSolo ? '#0369a1' : '#6d28d9',
-                              border: isSolo ? '1px solid #bae6fd' : '1px solid #e9d5ff'
-                            }}
-                          >
-                            {chibiMode && (
-                              <img
-                                src={isSolo ? CHIBI_ASSETS.characters.coding : CHIBI_ASSETS.logos.team}
-                                alt="Scale"
-                                style={{ width: '14px', height: '14px', objectFit: 'contain' }}
-                              />
-                            )}
-                            {isSolo ? 'Đồ án Cá nhân (1 SV)' : 'Đồ án Nhóm (2-3 SV)'}
-                          </span>
-                          <h4 style={{ margin: '6px 0 2px 0', fontSize: '16px', fontWeight: 800, color: 'var(--text)' }}>
-                            {group.team?.ten_nhom}
-                          </h4>
-                          <div style={{ fontSize: '12.5px', color: 'var(--text-muted)', fontWeight: 500 }}>
-                            Đề tài: <strong>{group.ten_do_an}</strong>
-                          </div>
-                        </div>
-
-                        <div style={{ textAlign: 'right' }}>
-                          <div style={{ fontSize: '20px', fontWeight: 800, color: '#15803d' }}>
-                            {Number(group.tien_do_tong || 0).toFixed(0)}%
-                          </div>
-                          <div style={{ fontSize: '11px', color: 'var(--text-subtle)' }}>Tiến độ tổng</div>
-                        </div>
-                      </div>
-
-                      {/* Thành viên */}
-                      <div style={{ background: 'var(--surface-subtle)', padding: '10px 12px', borderRadius: '8px', fontSize: '12px' }}>
-                        <div style={{ color: 'var(--text-muted)', marginBottom: '4px', fontWeight: 600 }}>Thành viên phụ trách:</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                          {group.team?.members?.map(m => (
-                            <span key={m.ma_nguoi_dung} style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '2px 8px', borderRadius: '6px', fontWeight: 600 }}>
-                              {m.ho_ten} {m.vai_tro_trong_nhom === 'nhom_truong' ? '⭐' : ''}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Nút hành động cốt lõi: ĐI VÀO WORKSPACE KANBAN CỦA NHÓM NÀY */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                        <button
-                          className="btn btn-primary"
-                          onClick={() => enterWorkspace(group.ma_do_an)}
-                          style={{
-                            flex: 1,
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            padding: '9px 16px',
-                            background: '#2563eb',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '6px'
-                          }}
-                        >
-                          {chibiMode && (
-                            <img
-                              src={CHIBI_ASSETS.icons.kanban}
-                              alt="Kanban"
-                              style={{ width: '16px', height: '16px', objectFit: 'contain' }}
-                            />
-                          )}
-                          <span>Đi vào Quản lý Tiến độ (Kanban) của Nhóm này &rarr;</span>
-                        </button>
-
-                        {group.ma_do_an !== 'da-dacs-01' && (
-                          <button
-                            className="btn btn-outline btn-sm"
-                            title="Đặt lại đề tài về trống để demo lại"
-                            onClick={() => {
-                              if (window.confirm('Đặt lại đề tài này về trạng thái trống?')) {
-                                resetTopicRegistration(group.ma_do_an);
-                              }
-                            }}
-                            style={{ color: '#dc2626', borderColor: '#fecaca', background: '#fef2f2' }}
-                          >
-                            Đặt lại
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Tab 3: Sĩ số SV lớp */}
-          {lecturerSubTab === 'roster' && (
-            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px 20px' }}>
-              <h4 style={{ margin: '0 0 12px 0', fontSize: '15px', fontWeight: 700 }}>Danh sách Sinh viên Lớp {currentClassInfo.ten_lop}</h4>
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                 <thead>
-                  <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)' }}>
-                    <th style={{ padding: '8px' }}>Họ tên</th>
-                    <th style={{ padding: '8px' }}>Email</th>
-                    <th style={{ padding: '8px' }}>Tình trạng Nhóm</th>
-                    <th style={{ padding: '8px' }}>Đề tài thực hiện</th>
+                  <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11.5px', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '11px 14px' }}>Nhóm / Cá nhân</th>
+                    <th style={{ padding: '11px 14px' }}>Đề tài đồ án</th>
+                    <th style={{ padding: '11px 14px' }}>Thành viên</th>
+                    <th style={{ padding: '11px 14px', width: '140px' }}>Tiến độ</th>
+                    <th style={{ padding: '11px 14px' }}>GitHub</th>
+                    <th style={{ padding: '11px 14px', textAlign: 'right' }}>Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {students.map(s => {
-                    const m = s.danh_sach_nhom?.[0];
-                    return (
-                      <tr key={s.ma_nguoi_dung} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '10px 8px', fontWeight: 600 }}>{s.ho_ten}</td>
-                        <td style={{ padding: '10px 8px', color: 'var(--text-muted)' }}>{s.email}</td>
-                        <td style={{ padding: '10px 8px' }}>
-                          {m ? (
-                            <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '99px', fontSize: '11px', fontWeight: 700 }}>
-                              {m.ten_nhom}
+                  {registeredGroups.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ padding: '28px', textAlign: 'center', color: 'var(--text-subtle)' }}>
+                        Chưa có nhóm nào đăng ký đề tài trong lớp này.
+                      </td>
+                    </tr>
+                  ) : (
+                    registeredGroups.map(group => {
+                      const pct = Number(group.tien_do_tong || 0).toFixed(0);
+                      const gh = group.github_summary;
+                      return (
+                        <tr key={group.ma_do_an} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <td style={{ padding: '12px 14px', fontWeight: 700, color: 'var(--text)', whiteSpace: 'nowrap' }}>
+                            <div>{group.team?.ten_nhom}</div>
+                            <span style={{ fontSize: '11px', fontWeight: 600, color: group.quy_mo === 'ca_nhan' ? '#0369a1' : '#6d28d9' }}>
+                              {group.quy_mo === 'ca_nhan' ? 'Cá nhân' : 'Nhóm'} ({group.team?.members?.length || 1} SV)
                             </span>
-                          ) : (
-                            <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '99px', fontSize: '11px', fontWeight: 600 }}>
-                              Chưa có nhóm
-                            </span>
-                          )}
-                        </td>
-                        <td style={{ padding: '10px 8px' }}>
-                          {m ? (
-                            <span
-                              onClick={() => enterWorkspace(m.ma_do_an)}
-                              style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}
+                          </td>
+
+                          <td style={{ padding: '12px 14px', maxWidth: '280px' }}>
+                            <div style={{ fontWeight: 600, color: 'var(--text)', lineHeight: 1.35 }}>{group.ten_do_an}</div>
+                          </td>
+
+                          <td style={{ padding: '12px 14px' }}>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                              {group.team?.members?.map(m => (
+                                <span
+                                  key={m.ma_nguoi_dung}
+                                  style={{
+                                    fontSize: '11.5px',
+                                    padding: '2px 7px',
+                                    borderRadius: '6px',
+                                    background: m.vai_tro_trong_nhom === 'nhom_truong' ? '#fef3c7' : 'var(--surface-subtle)',
+                                    color: m.vai_tro_trong_nhom === 'nhom_truong' ? '#92400e' : 'var(--text)',
+                                    border: '1px solid var(--border)',
+                                    fontWeight: 600
+                                  }}
+                                >
+                                  {m.ho_ten}{m.vai_tro_trong_nhom === 'nhom_truong' ? ' ⭐' : ''}
+                                </span>
+                              ))}
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '12px 14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, color: '#15803d', marginBottom: '4px' }}>
+                              <span>{pct}%</span>
+                              <span style={{ fontSize: '10.5px', color: 'var(--text-subtle)', fontWeight: 500 }}>{group.so_cong_viec || 0} việc</span>
+                            </div>
+                            <div style={{ height: '6px', background: '#e4e4e7', borderRadius: '99px', overflow: 'hidden' }}>
+                              <div style={{ height: '100%', width: `${pct}%`, background: '#16a34a' }} />
+                            </div>
+                          </td>
+
+                          <td style={{ padding: '12px 14px', whiteSpace: 'nowrap' }}>
+                            {gh?.connected ? (
+                              <button
+                                className="btn btn-outline btn-sm"
+                                onClick={() => enterWorkspace(group.ma_do_an, 'github')}
+                                style={{ fontSize: '11.5px', padding: '4px 8px', fontWeight: 600 }}
+                                title={`Mở GitHub Dashboard của ${gh.repo_slug}`}
+                              >
+                                🐙 {gh.commit_count > 0 ? `${gh.commit_count} commits` : 'Đã gắn'}
+                              </button>
+                            ) : (
+                              <button
+                                className="btn btn-outline btn-sm"
+                                onClick={() => enterWorkspace(group.ma_do_an, 'github')}
+                                style={{ fontSize: '11px', padding: '4px 8px', color: 'var(--text-subtle)' }}
+                              >
+                                + Gắn Repo
+                              </button>
+                            )}
+                          </td>
+
+                          <td style={{ padding: '12px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                            <div style={{ display: 'inline-flex', gap: '6px' }}>
+                              <button
+                                className="btn btn-primary btn-sm"
+                                onClick={() => enterWorkspace(group.ma_do_an, 'kanban')}
+                                style={{ background: '#2563eb', fontWeight: 700 }}
+                              >
+                                Vào Kanban &rarr;
+                              </button>
+                              {group.ma_do_an !== 'da-dacs-01' && (
+                                <button
+                                  className="btn btn-outline btn-sm"
+                                  onClick={() => {
+                                    if (window.confirm('Đặt lại đề tài này về trạng thái trống?')) {
+                                      resetTopicRegistration(group.ma_do_an);
+                                    }
+                                  }}
+                                  style={{ color: '#dc2626', borderColor: '#fecaca' }}
+                                >
+                                  Đặt lại
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB 2: NGÂN HÀNG ĐỀ TÀI DẠNG BẢNG GỌN */}
+          {lecturerSubTab === 'topics' && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ background: 'var(--surface-subtle)', borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11.5px', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '11px 14px', width: '48px' }}>#</th>
+                    <th style={{ padding: '11px 14px' }}>Tên đề tài</th>
+                    <th style={{ padding: '11px 14px', width: '140px' }}>Quy mô</th>
+                    <th style={{ padding: '11px 14px', width: '190px' }}>Trạng thái</th>
+                    <th style={{ padding: '11px 14px', textAlign: 'right', width: '190px' }}>Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {topics.map((topic, idx) => (
+                    <tr key={topic.ma_do_an} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '11px 14px', color: 'var(--text-subtle)', fontWeight: 600 }}>{idx + 1}</td>
+                      <td style={{ padding: '11px 14px', fontWeight: 600, color: 'var(--text)' }}>{topic.ten_do_an}</td>
+                      <td style={{ padding: '11px 14px', whiteSpace: 'nowrap' }}>
+                        <span
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            padding: '2px 8px',
+                            borderRadius: '999px',
+                            background: topic.quy_mo === 'ca_nhan' ? '#e0f2fe' : '#f3e8ff',
+                            color: topic.quy_mo === 'ca_nhan' ? '#0369a1' : '#6d28d9'
+                          }}
+                        >
+                          {topic.quy_mo === 'ca_nhan' ? 'Cá nhân (1 SV)' : 'Nhóm (2-3 SV)'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '11px 14px' }}>
+                        {topic.da_dang_ky ? (
+                          <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>
+                            ✓ {topic.team?.ten_nhom} ({Number(topic.tien_do_tong || 0).toFixed(0)}%)
+                          </span>
+                        ) : (
+                          <span style={{ background: '#fef3c7', color: '#b45309', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>
+                            🟢 Chờ SV chọn
+                          </span>
+                        )}
+                      </td>
+                      <td style={{ padding: '11px 14px', textAlign: 'right', whiteSpace: 'nowrap' }}>
+                        <div style={{ display: 'inline-flex', gap: '6px' }}>
+                          <button
+                            className="btn btn-outline btn-sm"
+                            onClick={() => setDetailTopicModal(topic)}
+                            style={{ fontSize: '11.5px' }}
+                          >
+                            Chi tiết
+                          </button>
+                          {topic.da_dang_ky && (
+                            <button
+                              className="btn btn-primary btn-sm"
+                              onClick={() => enterWorkspace(topic.ma_do_an, 'kanban')}
+                              style={{ fontSize: '11.5px', background: '#2563eb' }}
                             >
-                              {m.ten_do_an}
-                            </span>
-                          ) : (
-                            <span style={{ color: 'var(--text-subtle)' }}>—</span>
+                              Kanban &rarr;
+                            </button>
                           )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* TAB 3: DANH SÁCH SINH VIÊN LỚP + LỌC NHANH */}
+          {lecturerSubTab === 'roster' && (
+            <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '16px 18px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700 }}>Sĩ số Sinh viên — {currentClassInfo.ten_lop}</h4>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    className={`tab-btn ${rosterFilter === 'all' ? 'active' : ''}`}
+                    onClick={() => setRosterFilter('all')}
+                    style={{ fontSize: '12px', padding: '4px 10px' }}
+                  >
+                    Tất cả ({students.length})
+                  </button>
+                  <button
+                    className={`tab-btn ${rosterFilter === 'unassigned' ? 'active' : ''}`}
+                    onClick={() => setRosterFilter('unassigned')}
+                    style={{ fontSize: '12px', padding: '4px 10px' }}
+                  >
+                    Chưa có nhóm ({students.filter(s => !s.da_co_nhom).length})
+                  </button>
+                </div>
+              </div>
+
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border)', textAlign: 'left', color: 'var(--text-muted)', fontSize: '11.5px' }}>
+                    <th style={{ padding: '8px' }}>Họ tên</th>
+                    <th style={{ padding: '8px' }}>Email</th>
+                    <th style={{ padding: '8px' }}>Nhóm hiện tại</th>
+                    <th style={{ padding: '8px' }}>Đề tài</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students
+                    .filter(s => rosterFilter === 'all' || !s.da_co_nhom)
+                    .map(s => {
+                      const m = s.danh_sach_nhom?.[0];
+                      return (
+                        <tr key={s.ma_nguoi_dung} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                          <td style={{ padding: '9px 8px', fontWeight: 600 }}>{s.ho_ten}</td>
+                          <td style={{ padding: '9px 8px', color: 'var(--text-muted)' }}>{s.email}</td>
+                          <td style={{ padding: '9px 8px' }}>
+                            {m ? (
+                              <span style={{ background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '99px', fontSize: '11px', fontWeight: 700 }}>
+                                {m.ten_nhom}
+                              </span>
+                            ) : (
+                              <span style={{ background: '#fef3c7', color: '#b45309', padding: '2px 8px', borderRadius: '99px', fontSize: '11px', fontWeight: 600 }}>
+                                Chưa có nhóm
+                              </span>
+                            )}
+                          </td>
+                          <td style={{ padding: '9px 8px' }}>
+                            {m ? (
+                              <span
+                                onClick={() => enterWorkspace(m.ma_do_an, 'kanban')}
+                                style={{ color: '#2563eb', cursor: 'pointer', textDecoration: 'underline' }}
+                              >
+                                {m.ten_do_an}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--text-subtle)' }}>—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
             </div>
@@ -896,486 +810,254 @@ export default function ClassroomPortalView() {
         </div>
       ) : (
         /* -------------------------------------------------------------------
-           B. GIAO DIỆN SINH VIÊN MÔN HỌC (STUDENT PORTAL)
+           B. GIAO DIỆN SINH VIÊN TINH GỌN (STUDENT PORTAL)
            ------------------------------------------------------------------- */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
 
+          {/* KHỐI 1: VIỆC CỦA BẠN LÚC NÀY */}
           {hasEnrolledProject ? (
-            /* TRƯỜNG HỢP 1: SINH VIÊN ĐÃ CÓ NHÓM / ĐỀ TÀI (CHUẨN LINEAR NỀN SÁNG CÓ HÌNH ẢNH CHIBI SINH ĐỘNG) */
             <div
+              data-tour-id="tour-sv-status-card"
               style={{
                 background: 'var(--surface-raised)',
-                borderRadius: '14px',
-                padding: '24px 26px',
+                borderRadius: '12px',
+                padding: '18px 22px',
                 border: '1px solid var(--border)',
                 borderLeft: '4px solid #2563eb',
-                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.05)',
+                boxShadow: '0 2px 6px rgba(37, 99, 235, 0.05)',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '16px',
-                position: 'relative',
-                overflow: 'hidden'
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px' }}>
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* Top tags row */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    <span
-                      style={{
-                        background: '#eff6ff',
-                        color: '#1d4ed8',
-                        border: '1px solid #bfdbfe',
-                        fontSize: '11.5px',
-                        fontWeight: 700,
-                        padding: '3px 12px',
-                        borderRadius: 'var(--radius-pill)',
-                        letterSpacing: '0.4px',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <img src={CHIBI_ASSETS.icons.done} alt="Done" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
-                      ĐỀ TÀI BẠN ĐANG THỰC HIỆN
-                    </span>
-
-                    <span style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      Vai trò của bạn:{' '}
-                      <strong
-                        style={{
-                          background: currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '#fef3c7' : '#f4f4f5',
-                          color: currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '#b45309' : '#52525b',
-                          border: currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '1px solid #fde68a' : '1px solid #e4e4e7',
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          fontSize: '11.5px',
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px'
-                        }}
-                      >
-                        <img
-                          src={currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? CHIBI_ASSETS.badges.leader : CHIBI_ASSETS.badges.fresher}
-                          alt="Badge"
-                          style={{ width: '14px', height: '14px', objectFit: 'contain' }}
-                        />
-                        {currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? 'Nhóm trưởng' : 'Thành viên'}
-                      </strong>
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 style={{ margin: '0 0 6px 0', fontSize: '20px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.35 }}>
-                      {studentProject.ten_do_an}
-                    </h3>
-                    <div style={{ fontSize: '13.5px', color: '#2563eb', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <img src={CHIBI_ASSETS.logos.team} alt="Team" style={{ width: '22px', height: '22px', objectFit: 'contain' }} />
-                      <span>{studentProject.ten_nhom}</span>
-                      <span style={{ color: 'var(--text-subtle)', fontWeight: 400 }}>&bull;</span>
-                      <span style={{ color: '#15803d', fontWeight: 700, background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '1px 8px', borderRadius: '999px', fontSize: '11.5px' }}>
-                        Tiến độ: {Number(studentProject.tien_do_tong || 0).toFixed(0)}%
-                      </span>
-                    </div>
-                  </div>
+              <div style={{ flex: '1 1 380px', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '6px' }}>
+                  <span style={{ background: '#eff6ff', color: '#1d4ed8', border: '1px solid #bfdbfe', fontSize: '11px', fontWeight: 700, padding: '2px 10px', borderRadius: '999px' }}>
+                    ✓ ĐỀ TÀI CỦA BẠN
+                  </span>
+                  <span style={{ background: currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '#fef3c7' : '#f4f4f5', color: currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '#b45309' : '#52525b', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '6px' }}>
+                    {currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? '⭐ Nhóm trưởng' : 'Thành viên'}
+                  </span>
+                  <span style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px' }}>
+                    Tiến độ: {Number(studentProject.tien_do_tong || 0).toFixed(0)}%
+                  </span>
                 </div>
 
-                {/* Chibi Character Hero Card bên phải */}
-                {chibiMode && (
-                  <div
-                    style={{
-                      flexShrink: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      background: 'linear-gradient(135deg, #f0fdf4 0%, #eff6ff 100%)',
-                      border: '1px solid #dbeafe',
-                      borderRadius: '16px',
-                      padding: '10px 18px',
-                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-                      textAlign: 'center'
-                    }}
-                  >
-                    <img
-                      src={currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? CHIBI_ASSETS.characters.ganhTa : CHIBI_ASSETS.characters.coding}
-                      alt="Student Mascot"
-                      style={{ width: '84px', height: '84px', objectFit: 'contain', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.06))' }}
-                    />
-                    <span style={{ fontSize: '11px', fontWeight: 700, color: '#1d4ed8', marginTop: '4px' }}>
-                      {currentUser?.vai_tro_trong_nhom === 'nhom_truong' ? 'Gánh team về đích! 🚀' : 'Đang cày đồ án! 💻'}
-                    </span>
-                  </div>
-                )}
+                <h3 style={{ margin: '0 0 4px 0', fontSize: '17px', fontWeight: 700, color: 'var(--text)', lineHeight: 1.35 }}>
+                  {studentProject.ten_do_an}
+                </h3>
+                <div style={{ fontSize: '12.5px', color: '#2563eb', fontWeight: 600 }}>
+                  {studentProject.ten_nhom}
+                </div>
               </div>
 
-              {/* Nút hành động kêu gọi lớn: VÀO THẲNG KANBAN CỦA BẠN */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  flexWrap: 'wrap',
-                  gap: '14px',
-                  paddingTop: '16px',
-                  borderTop: '1px solid var(--border-subtle)'
-                }}
-              >
-                <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
-                  Không gian làm việc đã sẵn sàng với Bảng việc Kanban, Mốc tiến độ và Công cụ tự chấm % tiến độ.
-                </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-outline btn-sm"
+                  onClick={() => enterWorkspace(studentProject.ma_do_an, 'github')}
+                  style={{ fontWeight: 700, padding: '8px 12px' }}
+                >
+                  🐙 GitHub Nhóm
+                </button>
                 <button
                   className="btn btn-primary"
-                  onClick={() => enterWorkspace(studentProject.ma_do_an)}
-                  style={{
-                    background: '#2563eb',
-                    borderColor: '#2563eb',
-                    color: '#ffffff',
-                    padding: '10px 20px',
-                    fontSize: '13.5px',
-                    fontWeight: 700,
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}
+                  onClick={() => enterWorkspace(studentProject.ma_do_an, 'kanban')}
+                  style={{ background: '#2563eb', borderColor: '#2563eb', fontWeight: 700, padding: '8px 16px' }}
                 >
-                  <img src={CHIBI_ASSETS.icons.kanban} alt="Kanban" style={{ width: '18px', height: '18px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-                  <span>Đi vào Bảng công việc & Báo cáo Tiến độ (Kanban) →</span>
+                  🚀 Vào Bảng việc Kanban &rarr;
                 </button>
               </div>
             </div>
           ) : (
-            /* TRƯỜNG HỢP 2: SINH VIÊN CHƯA CÓ NHÓM / CHỜ ĐĂNG KÝ */
             <div
+              data-tour-id="tour-sv-status-card"
               style={{
                 background: 'var(--surface)',
                 border: '1.5px dashed #f59e0b',
-                borderRadius: '16px',
-                padding: '24px 26px',
+                borderRadius: '12px',
+                padding: '18px 22px',
                 display: 'flex',
-                flexDirection: 'column',
-                gap: '18px'
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '14px'
               }}
             >
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                  <span style={{ background: '#fef3c7', color: '#b45309', fontSize: '11.5px', fontWeight: 700, padding: '3px 10px', borderRadius: '999px', border: '1px solid #fde68a' }}>
-                    CHƯA CÓ ĐỀ TÀI MÔN HỌC
-                  </span>
-                </div>
-                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: 'var(--text)' }}>
-                  Bạn chưa đăng ký đề tài môn học {currentClassInfo.ten_mon_hoc}
+              <div style={{ flex: '1 1 320px' }}>
+                <span style={{ background: '#fef3c7', color: '#b45309', fontSize: '11px', fontWeight: 700, padding: '2px 10px', borderRadius: '999px' }}>
+                  CHƯA CÓ ĐỀ TÀI
+                </span>
+                <h3 style={{ margin: '6px 0 4px 0', fontSize: '16px', fontWeight: 800, color: 'var(--text)' }}>
+                  Hãy chọn đề tài cá nhân hoặc lập nhóm để bắt đầu
                 </h3>
-                <p style={{ margin: '6px 0 0', fontSize: '13px', color: 'var(--text-muted)' }}>
-                  Giảng viên phụ trách đã công bố ngân hàng đề tài. Bạn hãy lựa chọn 1 trong 2 hình thức thực hiện dưới đây để bắt đầu:
-                </p>
+                <div style={{ fontSize: '12.5px', color: 'var(--text-muted)' }}>
+                  Hiện còn <strong>{openTopics.length}</strong> đề tài đang mở trong lớp {currentClassInfo.ten_lop}.
+                </div>
               </div>
 
-              {/* 2 Lựa chọn Độc lập vs Lập nhóm */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                {/* Lựa chọn 1: Làm Cá nhân */}
-                <div
-                  style={{
-                    background: '#f0f9ff',
-                    border: '1px solid #bae6fd',
-                    borderRadius: '12px',
-                    padding: '18px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '14px',
-                    position: 'relative'
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    const firstSolo = openTopics.find(t => t.quy_mo === 'ca_nhan') || openTopics[0];
+                    if (firstSolo) handleOpenSoloConfirm(firstSolo);
+                    else alert('Hiện chưa có đề tài còn trống!');
                   }}
+                  style={{ background: '#0284c7', borderColor: '#0284c7', fontWeight: 700, padding: '8px 14px' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                    <div>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                        Hình thức 1 &bull; 1 SV Độc lập
-                      </div>
-                      <h4 style={{ margin: '4px 0 6px 0', fontSize: '16px', fontWeight: 700, color: '#0c4a6e' }}>
-                        Làm Đề tài Cá nhân
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '12.5px', color: '#0284c7', lineHeight: 1.45 }}>
-                        Dành cho sinh viên muốn tự nghiên cứu độc lập. Bạn chỉ cần chọn đề tài 1 người là hệ thống kích hoạt workspace ngay.
-                      </p>
-                    </div>
-                    {chibiMode && (
-                      <img
-                        src={CHIBI_ASSETS.characters.coding}
-                        alt="Solo"
-                        style={{ width: '56px', height: '56px', objectFit: 'contain', flexShrink: 0 }}
-                      />
-                    )}
-                  </div>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      const firstSolo = openTopics.find(t => t.quy_mo === 'ca_nhan') || topics.find(t => t.quy_mo === 'ca_nhan');
-                      if (firstSolo) handleOpenSoloConfirm(firstSolo);
-                      else alert('Hiện chưa có đề tài cá nhân nào còn trống!');
-                    }}
-                    style={{ background: '#0284c7', borderColor: '#0284c7', fontWeight: 700, justifyContent: 'center', gap: '6px' }}
-                  >
-                    <span>⚡ Xem & Nhận Đề tài Cá nhân</span>
-                  </button>
-                </div>
-
-                {/* Lựa chọn 2: Làm Nhóm */}
-                <div
-                  style={{
-                    background: '#faf5ff',
-                    border: '1px solid #e9d5ff',
-                    borderRadius: '12px',
-                    padding: '18px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: '14px',
-                    position: 'relative'
+                  ⚡ Nhận Đề tài Cá nhân
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => {
+                    const firstTeam = openTopics.find(t => t.quy_mo === 'nhom') || openTopics[0];
+                    if (firstTeam) handleOpenTeamModal(firstTeam);
+                    else alert('Hiện chưa có đề tài còn trống!');
                   }}
+                  style={{ background: '#7c3aed', borderColor: '#7c3aed', fontWeight: 700, padding: '8px 14px' }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '10px' }}>
-                    <div>
-                      <div style={{ fontSize: '11px', fontWeight: 700, color: '#6d28d9', textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                        Hình thức 2 &bull; Phối hợp 2-3 SV
-                      </div>
-                      <h4 style={{ margin: '4px 0 6px 0', fontSize: '16px', fontWeight: 700, color: '#4c1d95' }}>
-                        Làm Đề tài Nhóm
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '12.5px', color: '#7c3aed', lineHeight: 1.45 }}>
-                        Dành cho sinh viên làm việc nhóm. Bạn thực hiện đặt tên nhóm, chọn bạn cùng lớp và chỉ định ai là Nhóm trưởng.
-                      </p>
-                    </div>
-                    {chibiMode && (
-                      <img
-                        src={CHIBI_ASSETS.characters.chiaTask}
-                        alt="Team"
-                        style={{ width: '56px', height: '56px', objectFit: 'contain', flexShrink: 0 }}
-                      />
-                    )}
-                  </div>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => {
-                      const firstTeam = openTopics.find(t => t.quy_mo === 'nhom') || topics.find(t => t.quy_mo === 'nhom');
-                      if (firstTeam) handleOpenTeamModal(firstTeam);
-                      else alert('Hiện chưa có đề tài nhóm nào còn trống!');
-                    }}
-                    style={{ background: '#7c3aed', borderColor: '#7c3aed', fontWeight: 700, justifyContent: 'center', gap: '6px' }}
-                  >
-                    <span>👥 Lập Nhóm & Đăng ký Đề tài</span>
-                  </button>
-                </div>
+                  👥 Lập Nhóm &amp; Đăng ký
+                </button>
               </div>
             </div>
           )}
 
-          {/* Danh mục Ngân hàng đề tài môn học của Lớp (SV xem tham khảo) */}
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <img src={CHIBI_ASSETS.icons.checklist} alt="Bank" style={{ width: '20px', height: '20px', objectFit: 'contain' }} />
-                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: 700, color: 'var(--text)' }}>
-                  Ngân hàng Đề tài Môn học ({currentClassInfo.ten_lop.startsWith('Lớp ') ? currentClassInfo.ten_lop : `Lớp ${currentClassInfo.ten_lop}`})
-                </h4>
+          {/* KHỐI 2: NGÂN HÀNG ĐỀ TÀI RÚT GỌN (DỄ NHÌN, BẤM CHI TIẾT ĐỂ XEM MÔ TẢ) */}
+          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '12px', padding: '18px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
+              <h4 style={{ margin: 0, fontSize: '14.5px', fontWeight: 700, color: 'var(--text)' }}>
+                📚 Ngân hàng Đề tài ({topics.length})
+              </h4>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                {[
+                  { id: 'all', label: `Tất cả (${topics.length})` },
+                  { id: 'open', label: `Còn trống (${openTopics.length})` },
+                  { id: 'taken', label: `Đã có nhóm (${registeredGroups.length})` }
+                ].map(f => (
+                  <button
+                    key={f.id}
+                    className={`tab-btn ${studentTopicFilter === f.id ? 'active' : ''}`}
+                    onClick={() => setStudentTopicFilter(f.id)}
+                    style={{ fontSize: '12px', padding: '4px 10px' }}
+                  >
+                    {f.label}
+                  </button>
+                ))}
               </div>
-              <span style={{ fontSize: '12px', color: 'var(--text-subtle)' }}>
-                {topics.length} đề tài đã công bố
-              </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '14px' }}>
-              {topics.map(t => {
-                const isMyProject = hasEnrolledProject && (studentProject?.ma_do_an === t.ma_do_an);
-                const isSolo = t.quy_mo === 'ca_nhan';
-                const isRegistered = t.da_dang_ky;
-                const leader = t.team?.members?.find(m => m.vai_tro_trong_nhom === 'nhom_truong');
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '12px' }}>
+              {topics
+                .filter(t => {
+                  if (studentTopicFilter === 'open') return !t.da_dang_ky;
+                  if (studentTopicFilter === 'taken') return t.da_dang_ky;
+                  return true;
+                })
+                .map(t => {
+                  const isMyProject = hasEnrolledProject && (studentProject?.ma_do_an === t.ma_do_an);
+                  const isSolo = t.quy_mo === 'ca_nhan';
+                  const isRegistered = t.da_dang_ky;
 
-                return (
-                  <div
-                    key={t.ma_do_an}
-                    style={{
-                      border: isMyProject ? '2px solid #2563eb' : '1px solid var(--border)',
-                      borderRadius: '12px',
-                      padding: '16px',
-                      background: isMyProject ? '#f8faff' : 'var(--surface-raised)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: '14px',
-                      boxShadow: isMyProject ? '0 4px 14px rgba(37, 99, 235, 0.08)' : '0 1px 3px rgba(0, 0, 0, 0.03)',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}
-                  >
-                    <div>
-                      {/* Hàng trên: Badge Quy mô Chibi & Nhãn trạng thái */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                  return (
+                    <div
+                      key={t.ma_do_an}
+                      style={{
+                        border: isMyProject ? '2px solid #2563eb' : '1px solid var(--border)',
+                        borderRadius: '10px',
+                        padding: '14px 16px',
+                        background: isMyProject ? '#f8faff' : 'var(--surface-raised)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: '12px'
+                      }}
+                    >
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
                           <span
                             style={{
-                              fontSize: '11px',
+                              fontSize: '10.5px',
                               fontWeight: 700,
                               color: isSolo ? '#0369a1' : '#6d28d9',
                               background: isSolo ? '#e0f2fe' : '#f3e8ff',
-                              border: isSolo ? '1px solid #bae6fd' : '1px solid #e9d5ff',
                               padding: '2px 8px',
-                              borderRadius: '999px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '5px'
+                              borderRadius: '999px'
                             }}
                           >
-                            <img
-                              src={isSolo ? CHIBI_ASSETS.characters.coding : CHIBI_ASSETS.characters.chiaTask}
-                              alt="Scale"
-                              style={{ width: '15px', height: '15px', objectFit: 'contain' }}
-                            />
-                            {isSolo ? 'Đề tài 1 người' : 'Đề tài Nhóm (2-3 SV)'}
+                            {isSolo ? '1 SV' : 'Nhóm'}
                           </span>
 
-                          {isMyProject && (
-                            <span
-                              style={{
-                                fontSize: '10.5px',
-                                fontWeight: 800,
-                                color: '#1d4ed8',
-                                background: '#dbeafe',
-                                border: '1px solid #bfdbfe',
-                                padding: '2px 8px',
-                                borderRadius: '999px',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
-                              }}
-                            >
-                              ⭐ ĐỀ TÀI CỦA BẠN
+                          {isMyProject ? (
+                            <span style={{ fontSize: '10.5px', fontWeight: 800, color: '#1d4ed8', background: '#dbeafe', padding: '2px 8px', borderRadius: '999px' }}>
+                              ⭐ Của bạn &bull; {Number(t.tien_do_tong || 0).toFixed(0)}%
+                            </span>
+                          ) : isRegistered ? (
+                            <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#15803d', background: '#f0fdf4', padding: '2px 8px', borderRadius: '999px' }}>
+                              ✓ {t.team?.ten_nhom} ({Number(t.tien_do_tong || 0).toFixed(0)}%)
+                            </span>
+                          ) : (
+                            <span style={{ fontSize: '10.5px', fontWeight: 700, color: '#b45309', background: '#fef3c7', padding: '2px 8px', borderRadius: '999px' }}>
+                              🟢 Còn trống
                             </span>
                           )}
                         </div>
 
-                        {isRegistered ? (
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              color: '#15803d',
-                              fontWeight: 700,
-                              background: '#f0fdf4',
-                              border: '1px solid #bbf7d0',
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                          >
-                            <img src={CHIBI_ASSETS.icons.done} alt="Done" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                            Đã có nhóm nhận &bull; {Number(t.tien_do_tong || 0).toFixed(0)}%
-                          </span>
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: '11px',
-                              color: '#b45309',
-                              fontWeight: 700,
-                              background: '#fef3c7',
-                              border: '1px solid #fde68a',
-                              padding: '2px 8px',
-                              borderRadius: '999px',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '4px'
-                            }}
-                          >
-                            <img src={CHIBI_ASSETS.icons.flag} alt="Open" style={{ width: '13px', height: '13px', objectFit: 'contain' }} />
-                            Còn trống
-                          </span>
-                        )}
+                        <div style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)', lineHeight: 1.35 }}>
+                          {t.ten_do_an}
+                        </div>
                       </div>
 
-                      <div style={{ fontWeight: 700, fontSize: '14.5px', color: 'var(--text)', lineHeight: 1.35 }}>
-                        {t.ten_do_an}
-                      </div>
-                      <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '5px', lineHeight: 1.45 }}>
-                        {t.mo_ta_sach}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px', borderTop: '1px solid var(--border-subtle)' }}>
+                        <button
+                          className="btn btn-outline btn-sm"
+                          onClick={() => setDetailTopicModal(t)}
+                          style={{ fontSize: '11.5px', padding: '5px 10px' }}
+                        >
+                          Chi tiết
+                        </button>
+
+                        {isRegistered ? (
+                          <button
+                            className={isMyProject ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
+                            onClick={() => enterWorkspace(t.ma_do_an, 'kanban')}
+                            style={{
+                              flex: 1,
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              background: isMyProject ? '#2563eb' : undefined,
+                              color: isMyProject ? '#fff' : '#1d4ed8',
+                              borderColor: isMyProject ? '#2563eb' : '#93c5fd'
+                            }}
+                          >
+                            {isMyProject ? '🚀 Vào Kanban →' : '👀 Xem nhóm →'}
+                          </button>
+                        ) : !hasEnrolledProject ? (
+                          <button
+                            className="btn btn-primary btn-sm"
+                            onClick={() => isSolo ? handleOpenSoloConfirm(t) : handleOpenTeamModal(t)}
+                            style={{
+                              flex: 1,
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '12px',
+                              background: isSolo ? '#0284c7' : '#7c3aed',
+                              borderColor: isSolo ? '#0284c7' : '#7c3aed'
+                            }}
+                          >
+                            {isSolo ? '⚡ Nhận đề tài' : '👥 Lập nhóm'}
+                          </button>
+                        ) : (
+                          <span style={{ flex: 1, textAlign: 'right', fontSize: '11px', color: 'var(--text-subtle)' }}>
+                            Chờ SV khác chọn
+                          </span>
+                        )}
                       </div>
                     </div>
-
-                    {/* KHU VỰC THÔNG TIN NHÓM & NÚT BẤM HÀNH ĐỘNG CỐT LÕI */}
-                    {isRegistered ? (
-                      /* Trường hợp A: Đề tài đã có nhóm phụ trách */
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingTop: '10px', borderTop: '1px solid var(--border)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '12px' }}>
-                          <span style={{ color: 'var(--text-muted)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                            <img src={CHIBI_ASSETS.logos.team} alt="Team" style={{ width: '14px', height: '14px', objectFit: 'contain' }} />
-                            <strong>{t.team?.ten_nhom || 'Nhóm phụ trách'}</strong>
-                            {leader && <span style={{ color: 'var(--text-subtle)' }}>({leader.ho_ten})</span>}
-                          </span>
-                          <span style={{ fontWeight: 700, color: '#15803d' }}>
-                            {Number(t.tien_do_tong || 0).toFixed(0)}%
-                          </span>
-                        </div>
-
-                        {/* Thanh mini progress */}
-                        <div style={{ height: '4px', background: '#e4e4e7', borderRadius: '2px', overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${Math.min(Math.max(Number(t.tien_do_tong || 0), 0), 100)}%`, background: isMyProject ? '#2563eb' : '#15803d', transition: 'width 0.3s ease' }}></div>
-                        </div>
-
-                        {/* NÚT BẤM MỞ KHÔNG GIAN KANBAN ĐỂ XEM MÌNH / NHÓM ĐANG LÀM GÌ */}
-                        <button
-                          className={isMyProject ? 'btn btn-primary btn-sm' : 'btn btn-outline btn-sm'}
-                          onClick={() => enterWorkspace(t.ma_do_an)}
-                          style={{
-                            width: '100%',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            gap: '6px',
-                            background: isMyProject ? '#2563eb' : undefined,
-                            borderColor: isMyProject ? '#2563eb' : '#93c5fd',
-                            color: isMyProject ? '#ffffff' : '#1d4ed8'
-                          }}
-                        >
-                          <img src={CHIBI_ASSETS.icons.kanban} alt="Kanban" style={{ width: '15px', height: '15px', objectFit: 'contain' }} />
-                          <span>
-                            {isMyProject ? '🚀 Đi vào Bảng việc Kanban của bạn →' : '👀 Xem Tiến độ & Bảng việc của nhóm này →'}
-                          </span>
-                        </button>
-                      </div>
-                    ) : (
-                      /* Trường hợp B: Đề tài còn trống */
-                      <div style={{ paddingTop: '10px', borderTop: '1px dashed var(--border)' }}>
-                        {!hasEnrolledProject ? (
-                          isSolo ? (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleOpenSoloConfirm(t)}
-                              style={{ width: '100%', justifyContent: 'center', background: '#0284c7', borderColor: '#0284c7', fontWeight: 700, gap: '6px' }}
-                            >
-                              <img src={CHIBI_ASSETS.characters.coding} alt="Solo" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                              <span>⚡ Nhận đề tài cá nhân này</span>
-                            </button>
-                          ) : (
-                            <button
-                              className="btn btn-primary btn-sm"
-                              onClick={() => handleOpenTeamModal(t)}
-                              style={{ width: '100%', justifyContent: 'center', background: '#7c3aed', borderColor: '#7c3aed', fontWeight: 700, gap: '6px' }}
-                            >
-                              <img src={CHIBI_ASSETS.characters.chiaTask} alt="Team" style={{ width: '16px', height: '16px', objectFit: 'contain' }} />
-                              <span>👥 Lập nhóm để làm đề tài này</span>
-                            </button>
-                          )
-                        ) : (
-                          <div style={{ fontSize: '11.5px', color: 'var(--text-subtle)', textAlign: 'center', padding: '4px 0' }}>
-                            🟢 Đề tài đang mở chờ sinh viên khác trong lớp chọn
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           </div>
         </div>
@@ -1881,6 +1563,64 @@ export default function ClassroomPortalView() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL E: XEM CHI TIẾT ĐỀ TÀI (GIÚP THẺ BÊN NGOÀI GỌN GÀNG, KHÔNG RỐI)
+         ===================================================================== */}
+      {detailTopicModal && (
+        <div className="modal-backdrop open" onClick={() => setDetailTopicModal(null)}>
+          <div className="modal-box" onClick={e => e.stopPropagation()} style={{ maxWidth: '540px' }}>
+            <div className="modal-header">
+              <h3>📄 Chi tiết Đề tài Đồ án</h3>
+              <button className="drawer-close-btn" onClick={() => setDetailTopicModal(null)}>✕</button>
+            </div>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', background: detailTopicModal.quy_mo === 'ca_nhan' ? '#e0f2fe' : '#f3e8ff', color: detailTopicModal.quy_mo === 'ca_nhan' ? '#0369a1' : '#6d28d9' }}>
+                  {detailTopicModal.quy_mo === 'ca_nhan' ? 'Đề tài Cá nhân (1 SV)' : 'Đề tài Nhóm (2-3 SV)'}
+                </span>
+                <span style={{ fontSize: '11px', fontWeight: 700, padding: '2px 8px', borderRadius: '999px', background: detailTopicModal.da_dang_ky ? '#dcfce7' : '#fef3c7', color: detailTopicModal.da_dang_ky ? '#15803d' : '#b45309' }}>
+                  {detailTopicModal.da_dang_ky ? `Đã nhận (${detailTopicModal.team?.ten_nhom})` : 'Còn trống'}
+                </span>
+              </div>
+
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: 'var(--text)', lineHeight: 1.4 }}>
+                {detailTopicModal.ten_do_an}
+              </h4>
+
+              <div style={{ background: 'var(--surface-subtle)', border: '1px solid var(--border)', borderRadius: '8px', padding: '12px', fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.55 }}>
+                {detailTopicModal.mo_ta_sach || 'Chưa có mô tả chi tiết cho đề tài này.'}
+              </div>
+
+              <div style={{ fontSize: '12px', color: 'var(--text-subtle)', display: 'flex', gap: '14px' }}>
+                <span>🚩 {detailTopicModal.so_moc || 0} mốc tiến độ</span>
+                <span>📋 {detailTopicModal.so_cong_viec || 0} công việc</span>
+                {detailTopicModal.da_dang_ky && (
+                  <span>📈 Tiến độ: <strong>{Number(detailTopicModal.tien_do_tong || 0).toFixed(0)}%</strong></span>
+                )}
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline" onClick={() => setDetailTopicModal(null)}>
+                Đóng
+              </button>
+              {detailTopicModal.da_dang_ky && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => {
+                    const targetId = detailTopicModal.ma_do_an;
+                    setDetailTopicModal(null);
+                    enterWorkspace(targetId, 'kanban');
+                  }}
+                >
+                  🚀 Vào Kanban &rarr;
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

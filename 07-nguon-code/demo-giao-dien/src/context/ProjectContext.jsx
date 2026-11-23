@@ -140,12 +140,12 @@ export function ProjectProvider({ children }) {
     return res;
   }, []);
 
-  // Điều hướng chuyển tầng: Đi vào Không gian Làm việc (Kanban) của 1 nhóm
-  const enterWorkspace = useCallback((projectId) => {
+  // Điều hướng chuyển tầng: Đi vào Không gian Làm việc (Kanban hoặc GitHub) của 1 nhóm
+  const enterWorkspace = useCallback((projectId, targetTab = 'kanban') => {
     setFilterMilestoneId('all');
     setSelectedTaskId(null);
     if (projectId) setActiveProjectId(projectId);
-    setActiveTab('kanban');
+    setActiveTab(targetTab);
   }, []);
 
   // Điều hướng chuyển tầng: Quay lại Cổng Môn học & Lớp học phần (GVPTMH / SV)

@@ -11,6 +11,7 @@ import MilestonesView from './components/MilestonesView.jsx';
 import TeamView from './components/TeamView.jsx';
 import NotificationCenter from './components/NotificationCenter.jsx';
 import ClassroomPortalView from './components/ClassroomPortalView.jsx';
+import GitHubDashboardView from './components/GitHubDashboardView.jsx';
 import TaskDrawer from './components/TaskDrawer.jsx';
 import TaskModal from './components/TaskModal.jsx';
 import LoginScreen from './components/LoginScreen.jsx';
@@ -80,6 +81,7 @@ export default function App() {
             {activeTab === 'kanban' && <KanbanBoard />}
             {activeTab === 'table' && <TableView />}
             {activeTab === 'milestones' && <MilestonesView />}
+            {activeTab === 'github' && <GitHubDashboardView />}
             {activeTab === 'team' && <TeamView />}
             {activeTab === 'notifications' && <NotificationCenter />}
           </div>

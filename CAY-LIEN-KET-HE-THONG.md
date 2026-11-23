@@ -28,17 +28,20 @@
 ├── 🚀 Khởi chạy nhanh: [run_demo.bat](../run_demo.bat) ──> Chạy Fullstack tại http://localhost:4173
 ├── 📜 Quy tắc bắt buộc (Rules): [AGENTS.md](./AGENTS.md) & [.agents/rules/cay-lien-ket.md](../.agents/rules/cay-lien-ket.md)
 ├── 📋 Chốt nghiệp vụ gốc: [00-ke-hoach/THONG-TIN-NGHIEP-VU.md](./00-ke-hoach/THONG-TIN-NGHIEP-VU.md)
+├── 📌 Phân công Task Nhóm (TDMHorizon & Sixduy): [00-ke-hoach/PHAN-CONG-TASK-NHOM.md](./00-ke-hoach/PHAN-CONG-TASK-NHOM.md)
 ├── 🎯 Đặc tả 28 Yêu cầu (FR): [01-dac-ta/03-yeu-cau-chuc-nang.md](./01-dac-ta/03-yeu-cau-chuc-nang.md)
 ├── 📐 Sơ đồ UML (Use Case, Class, Sequence, Activity): [02-uml/](./02-uml/)
 ├── 🗄️ CSDL 9 Bảng BCNF & Tableau 20x8: [03-csdl/07-schema-sql-du-kien.md](./03-csdl/07-schema-sql-du-kien.md)
 ├── 🗺️ Lược đồ Thông tin & Kịch bản Bảo vệ: [04-thiet-ke-he-thong/04-luoc-do-thong-tin-va-kich-ban-bao-ve.md](./04-thiet-ke-he-thong/04-luoc-do-thong-tin-va-kich-ban-bao-ve.md)
 └── 💻 Mã nguồn Fullstack (React 19 + Node.js + SQLite): [07-nguon-code/demo-giao-dien/](./07-nguon-code/demo-giao-dien/)
-    ├── ⚙️ Backend API & SQLite Server: [server.js](./07-nguon-code/demo-giao-dien/server.js) (23 REST Endpoints + Upload `/uploads/`)
-    ├── 🌱 Khởi tạo & Seed 9 bảng SQLite + Lớp môn học: [src/db/initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js)
+    ├── ⚙️ Backend API & SQLite Server: [server.js](./07-nguon-code/demo-giao-dien/server.js) (28 REST Endpoints + GitHub Sync/Cache + Upload `/uploads/`)
+    ├── 🌱 Khởi tạo & Seed 9 bảng BCNF + Lớp môn học + GitHub: [src/db/initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js)
     ├── 🧠 Quản lý State, Auth & Hai Tầng Trải nghiệm: [src/context/ProjectContext.jsx](./07-nguon-code/demo-giao-dien/src/context/ProjectContext.jsx)
-    └── 🎨 15 Giao diện Components: [src/components/](./07-nguon-code/demo-giao-dien/src/components/)
+    └── 🎨 16 Giao diện Components & Cấu hình: [src/components/](./07-nguon-code/demo-giao-dien/src/components/)
         ├── 🔐 Đăng nhập & Đổi tài khoản (`@gmail.com`): [LoginScreen.jsx](./07-nguon-code/demo-giao-dien/src/components/LoginScreen.jsx)
-        ├── 🏫 Cổng Môn học GVPTMH & Sinh viên: [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx)
+        ├── 🏫 Cổng Môn học Tinh giản GVPTMH & Sinh viên: [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx)
+        ├── 🐙 Dashboard Tiến độ GitHub (Commits, PRs, Push): [GitHubDashboardView.jsx](./07-nguon-code/demo-giao-dien/src/components/GitHubDashboardView.jsx)
+        ├── 🧭 Khung Hướng dẫn Sử dụng (Dài hạn - Chờ chốt): [guideConfig.js](./07-nguon-code/demo-giao-dien/src/constants/guideConfig.js)
         └── 🚀 Không gian Chi tiết Workspace: [KanbanBoard.jsx](./07-nguon-code/demo-giao-dien/src/components/KanbanBoard.jsx) + [TaskDrawer.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskDrawer.jsx)
 ```
 
@@ -98,14 +101,21 @@
 │       ├── `GET/POST /api/tasks/:id/comments` ──> Bảng `binh_luan`
 │       └── `GET/POST /api/tasks/:id/attachments`, `DELETE /api/attachments/:id`, `GET /uploads/...` ──> Bảng `tep_dinh_kem` + Thư mục `uploads/`
 │
-└── 6️⃣ THÔNG BÁO HỆ THỐNG & DASHBOARD TIẾN ĐỘ TRỰC QUAN
-    ├── Đặc tả: [FR-23..FR-28](./01-dac-ta/03-yeu-cau-chuc-nang.md)
-    ├── Giao diện:
-    │   ├── 4 Thẻ chỉ số KPI (Có watermark Chibi 3D): [KpiCards.jsx](./07-nguon-code/demo-giao-dien/src/components/KpiCards.jsx)
-    │   ├── Đường đua Tiến độ Chibi Marathon trên Header: [Header.jsx](./07-nguon-code/demo-giao-dien/src/components/Header.jsx)
-    │   ├── Hồ sơ Thành viên & GVHD (Hero Character Cards): [TeamView.jsx](./07-nguon-code/demo-giao-dien/src/components/TeamView.jsx)
-    │   └── Trung tâm Thông báo: [NotificationCenter.jsx](./07-nguon-code/demo-giao-dien/src/components/NotificationCenter.jsx)
-    └── API & CSDL: `GET /api/notifications?userId=:id` ──> Bảng `thong_bao`
+├── 6️⃣ THÔNG BÁO HỆ THỐNG & DASHBOARD TIẾN ĐỘ TRỰC QUAN
+│   ├── Đặc tả: [FR-23..FR-28](./01-dac-ta/03-yeu-cau-chuc-nang.md)
+│   ├── Giao diện:
+│   │   ├── 4 Thẻ chỉ số KPI (Có watermark Chibi 3D): [KpiCards.jsx](./07-nguon-code/demo-giao-dien/src/components/KpiCards.jsx)
+│   │   ├── Đường đua Tiến độ Chibi Marathon trên Header: [Header.jsx](./07-nguon-code/demo-giao-dien/src/components/Header.jsx)
+│   │   ├── Hồ sơ Thành viên & GVHD (Hero Character Cards): [TeamView.jsx](./07-nguon-code/demo-giao-dien/src/components/TeamView.jsx)
+│   │   └── Trung tâm Thông báo: [NotificationCenter.jsx](./07-nguon-code/demo-giao-dien/src/components/NotificationCenter.jsx)
+│   └── API & CSDL: `GET /api/notifications?userId=:id` ──> Bảng `thong_bao`
+│
+└── 7️⃣ KẾT NỐI GITHUB DASHBOARD, TINH GIẢN CỔNG LỚP & KHUNG HƯỚNG DẪN DÀI HẠN
+    ├── Phân công Nhóm: [PHAN-CONG-TASK-NHOM.md](./00-ke-hoach/PHAN-CONG-TASK-NHOM.md) (Phần 1: TDMHorizon · Phần 2: Sixduy)
+    ├── Giao diện Tinh giản Cổng Lớp (Task A0): [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx) (GV 1 hàng KPI + 3 Tab; SV 1 Thẻ trạng thái + Modal Chi tiết)
+    ├── Dashboard Tiến độ GitHub (Task A2): [GitHubDashboardView.jsx](./07-nguon-code/demo-giao-dien/src/components/GitHubDashboardView.jsx) (Dòng thời gian Commit, Push theo thành viên, Pull Requests, Branches)
+    ├── Khung Hướng dẫn Sử dụng Dài hạn (Task A3): [guideConfig.js](./07-nguon-code/demo-giao-dien/src/constants/guideConfig.js) (`GUIDE_TOUR_ENABLED = false` - Chờ chốt toàn bộ tính năng)
+    └── API & CSDL Phụ trợ (Task A1): `GET/POST/DELETE /api/github/*` ──> Bảng phụ trợ `lien_ket_github` (Cache JSON + Ánh xạ GitHub Username, giữ nguyên 9 bảng BCNF)
 ```
 
 ---
@@ -188,18 +198,26 @@
 │   ├── `addAttachment(taskId, data)`   ───> `POST /api/tasks/:id/attachments` (Upload file base64 thực xuống `uploads/`)
 │   ├── `deleteAttachment(fileId)`      ───> `DELETE /api/attachments/:id` (Xóa file thực & bản ghi CSDL)
 │   ├── `getTeam(projectId)`            ───> `GET  /api/team?projectId=:id`
-│   └── `getNotifications(userId)`      ───> `GET  /api/notifications?userId=:id`
+│   ├── `getNotifications(userId)`      ───> `GET  /api/notifications?userId=:id`
+│   ├── `getGithubDashboard(projectId)` ───> `GET  /api/github/dashboard?projectId=:id`
+│   ├── `connectGithub(payload)`        ───> `POST /api/github/connect`
+│   ├── `syncGithub(projectId, token)`  ───> `POST /api/github/sync`
+│   ├── `saveGithubMapping(id, map)`    ───> `POST /api/github/mapping`
+│   └── `disconnectGithub(projectId)`   ───> `DELETE /api/github/connect?projectId=:id`
 │
-├── 🖥️ TẦNG BACKEND SERVER: [server.js](./07-nguon-code/demo-giao-dien/server.js) (Node.js HTTP + `node:sqlite`, 23 REST Endpoints Port 4173)
+├── 🗄️ CSDL Phụ trợ GitHub: Bảng `lien_ket_github` (Cache JSON Snapshot + Mapping Thành viên; giữ nguyên 9 bảng chuẩn BCNF)
+│
+├── 🖥️ TẦNG BACKEND SERVER: [server.js](./07-nguon-code/demo-giao-dien/server.js) (Node.js HTTP + `node:sqlite`, 28 REST Endpoints Port 4173)
 │   ├── `recalculateProjectProgress(projectId)` (Tự động tính `AVG(phan_tram_tien_do)` cập nhật vào `do_an.tien_do_tong`)
 │   ├── `parseTopicMeta(noiDung)` (Phân tích nhãn `[CÁ NHÂN 1 SV]` / `[NHÓM 2-3 SV]` không phá vỡ schema BCNF)
+│   ├── `parseGithubRepoUrl` / `fetchGithubSnapshot` / `buildGithubDashboardResponse` (Đồng bộ & Cache JSON GitHub REST API + Mapping `GitHub Username ↔ Thành viên`)
 │   ├── Lưu & Phục vụ file đính kèm thực (`/uploads/...`) trong thư mục cục bộ `uploads/`
 │   ├── Phục vụ tĩnh (Static File Server) từ `dist/` kết hợp fallback tìm kiếm tự động trong `public/`
 │   └── Cơ chế bảo vệ tài nguyên ảnh/css/js: Chặn trả về `index.html` cho file tĩnh lỗi (tránh lưu cache HTML gây vỡ ảnh)
 │
 └── 💽 TẦNG PERSISTENCE (LƯU TRỮ CỤC BỘ):
     ├── File CSDL nhị phân: [dacs.sqlite](./07-nguon-code/demo-giao-dien/dacs.sqlite) (Chuẩn hóa tên đề tài `Hệ thống quản lý công việc và tiến độ đồ án môn học`)
-    ├── Script tạo bảng & seed: [src/db/initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js)
+    ├── Script tạo bảng & seed: [src/db/initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js) (9 Bảng BCNF + Bảng phụ trợ `lop_mon_hoc`, `lien_ket_github`)
     └── Bản sao dữ liệu mẫu đối chiếu: [src/data/databaseMock.js](./07-nguon-code/demo-giao-dien/src/data/databaseMock.js)
 ```
 
@@ -207,20 +225,21 @@
 
 ## 5. Cây 5: Cây Liên kết Giao diện & Tài nguyên Chibi (UI/UX & Assets Link Tree)
 
-*Liên kết giữa **45 File hình ảnh Chibi tinh gọn** $\rightarrow$ **Từ điển hằng số `chibiAssets.js`** $\rightarrow$ **Vị trí hiển thị trên 14 Components**:*
+*Liên kết giữa **45 File hình ảnh Chibi tinh gọn** $\rightarrow$ **Từ điển hằng số `chibiAssets.js`** $\rightarrow$ **Vị trí hiển thị trên 16 Components & Khung Hướng dẫn**:*
 
 ```text
 🎨 CÂY LIÊN KẾT GIAO DIỆN & 45 TÀI NGUYÊN CHIBI
 │
 ├── 📁 Kho ảnh tĩnh (Đã lọc tinh gọn đúng 45 file): [public/assets/chibi/](./07-nguon-code/demo-giao-dien/public/assets/chibi/)
 ├── 🗂️ Từ điển ánh xạ đường dẫn: [src/constants/chibiAssets.js](./07-nguon-code/demo-giao-dien/src/constants/chibiAssets.js)
+├── 🧭 Khung Hướng dẫn Sử dụng (Dài hạn - Chờ chốt): [src/constants/guideConfig.js](./07-nguon-code/demo-giao-dien/src/constants/guideConfig.js) (`GUIDE_TOUR_ENABLED = false`)
 ├── 💅 Hệ thống CSS & Tokens: [src/styles/app.css](./07-nguon-code/demo-giao-dien/src/styles/app.css) & [src/styles/tokens.css](./07-nguon-code/demo-giao-dien/src/styles/tokens.css)
 │
-└── 🧩 ÁNH XẠ VÀO 15 REACT COMPONENTS ([src/components/](./07-nguon-code/demo-giao-dien/src/components/)):
+└── 🧩 ÁNH XẠ VÀO 16 REACT COMPONENTS ([src/components/](./07-nguon-code/demo-giao-dien/src/components/)):
     ├── 0. [LoginScreen.jsx](./07-nguon-code/demo-giao-dien/src/components/LoginScreen.jsx) ──> `logos.gearTick` + Modal Đăng nhập chuẩn TasteSkill nền sáng (`@gmail.com` & 4 nút chọn nhanh vai trò)
     ├── 1. [BannerRoleBar.jsx](./07-nguon-code/demo-giao-dien/src/components/BannerRoleBar.jsx) ──> `logos.gearTick`, `badges.review10`, `badges.leader`, `badges.fresher` + Hiển thị user đăng nhập, Đổi tài khoản, Đăng xuất & Tiêu đề chuẩn hóa `HỆ THỐNG QUẢN LÝ ĐỒ ÁN MÔN HỌC`
-    ├── 2. [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx) ──> Cổng Môn học GVPTMH & Sinh viên (TasteSkill v2 / Linear nền sáng; Modal tạo nhiều đề tài cùng lúc dạng danh sách động / dán hàng loạt; tích hợp Mascot Hero Card `ganhTa`/`coding`, huy hiệu vai trò `badges.leader`/`fresher`, biểu tượng quy mô `coding`/`chiaTask`, con dấu trạng thái `icons.done`/`flag`, nút Kanban `icons.kanban`)
-    ├── 3. [Sidebar.jsx](./07-nguon-code/demo-giao-dien/src/components/Sidebar.jsx) ──> Full-bleed Brand Banner (`logos.team`), Nút quay lại Cổng môn học, Avatar Frames (`gv`, `leader`, `member`), Chibi group icons (`characters.coding` / `logos.team`), Nav Icons
+    ├── 2. [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx) ──> Cổng Môn học Tinh giản GVPTMH (1 hàng 4 KPI + 3 Tab dạng bảng, nút `🐙 GitHub` & `Vào Kanban`) & Sinh viên (1 Thẻ trạng thái + Lưới đề tài tối giản + Modal E Chi tiết đề tài)
+    ├── 3. [Sidebar.jsx](./07-nguon-code/demo-giao-dien/src/components/Sidebar.jsx) ──> Full-bleed Brand Banner (`logos.team`), Tab `🐙 GitHub Tiến độ` (`data-tour-id="tour-nav-github"`), Nút quay lại Cổng môn học, Avatar Frames (`gv`, `leader`, `member`), Nav Icons
     ├── 4. [Header.jsx](./07-nguon-code/demo-giao-dien/src/components/Header.jsx) ──> Nút quay lại Cổng môn học, Đường đua Tiến độ Chibi Marathon (`characters.coLen` -> `coding` -> `deadline` -> `success`) + Cúp đích; Tiêu đề chuẩn `Hệ thống quản lý công việc và tiến độ đồ án môn học`
     ├── 5. [TopicsBankView.jsx](./07-nguon-code/demo-giao-dien/src/components/TopicsBankView.jsx) ──> Banner Lớp học phần nền sáng (`characters.gvReview`), Lưới Đề tài Cá nhân/Nhóm, Modal tạo nhiều đề tài cùng lúc, Modal Lập nhóm & Chọn Nhóm trưởng
     ├── 6. [KpiCards.jsx](./07-nguon-code/demo-giao-dien/src/components/KpiCards.jsx) ──> 4 Thẻ KPI có Watermark Chibi 3D (`chiaTask`, `coding`, `success`, `tieuChay`) + Đếm trễ hạn theo `isTaskOverdue()` + onError Fallback tự phục hồi
@@ -231,7 +250,8 @@
     ├── 11. [TeamView.jsx](./07-nguon-code/demo-giao-dien/src/components/TeamView.jsx) ──> Thẻ Giảng viên & Thẻ Hero Character Profile Cards (`leaderGanhTa`, `coding`)
     ├── 12. [NotificationCenter.jsx](./07-nguon-code/demo-giao-dien/src/components/NotificationCenter.jsx) ──> Hộp thư thông báo (`characters.notify`)
     ├── 13. [TaskDrawer.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskDrawer.jsx) ──> Sân khấu Cảm xúc Chibi theo % tự chấm (0%->100%), Con dấu khóa tiến độ, Bộ 6 Sticker bình luận (`stickers[0..5]`)
-    └── 14. [TaskModal.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskModal.jsx) ──> Popup Giao công việc mới
+    ├── 14. [TaskModal.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskModal.jsx) ──> Popup Giao công việc mới
+    └── 15. [GitHubDashboardView.jsx](./07-nguon-code/demo-giao-dien/src/components/GitHubDashboardView.jsx) ──> Dashboard Dòng thời gian Commit theo ngày, Thống kê Push từng thành viên (lọc theo người), Pull Requests, Branches & Cấu hình Mapping GitHub Username
 ```
 
 ---
@@ -335,7 +355,8 @@ flowchart TB
     ├── 📂 00-ke-hoach/ (Quản lý kế hoạch & Nguồn sự thật nghiệp vụ)
     │   ├── [THONG-TIN-NGHIEP-VU.md](./00-ke-hoach/THONG-TIN-NGHIEP-VU.md)
     │   ├── [KE-HOACH-TONG.md](./00-ke-hoach/KE-HOACH-TONG.md)
-    │   └── [CHO-DUYET.md](./00-ke-hoach/CHO-DUYET.md)
+    │   ├── [CHO-DUYET.md](./00-ke-hoach/CHO-DUYET.md)
+    │   └── [PHAN-CONG-TASK-NHOM.md](./00-ke-hoach/PHAN-CONG-TASK-NHOM.md) (Chia 2 phần TDMHorizon & Sixduy)
     │
     ├── 📂 01-dac-ta/ (Đặc tả yêu cầu phần mềm)
     │   ├── [01-y-tuong.md](./01-dac-ta/01-y-tuong.md)
@@ -372,20 +393,21 @@ flowchart TB
     └── 📂 07-nguon-code/demo-giao-dien/ (Ứng dụng Fullstack React 19 + Node.js + SQLite)
         ├── [package.json](./07-nguon-code/demo-giao-dien/package.json) & [vite.config.js](./07-nguon-code/demo-giao-dien/vite.config.js)
         ├── [index.html](./07-nguon-code/demo-giao-dien/index.html)
-        ├── [server.js](./07-nguon-code/demo-giao-dien/server.js) (Máy chủ REST API + Static Server cổng 4173)
-        ├── [dacs.sqlite](./07-nguon-code/demo-giao-dien/dacs.sqlite) (CSDL SQLite 9 bảng BCNF)
+        ├── [server.js](./07-nguon-code/demo-giao-dien/server.js) (Máy chủ 28 REST API + GitHub Sync/Cache + Static Server cổng 4173)
+        ├── [dacs.sqlite](./07-nguon-code/demo-giao-dien/dacs.sqlite) (CSDL SQLite 9 bảng BCNF + Bảng phụ trợ `lop_mon_hoc`, `lien_ket_github`)
         ├── 📂 public/assets/chibi/ (45 file ảnh PNG Chibi thiết yếu)
         └── 📂 src/
             ├── [main.jsx](./07-nguon-code/demo-giao-dien/src/main.jsx) & [App.jsx](./07-nguon-code/demo-giao-dien/src/App.jsx)
             ├── 📂 constants/
-            │   └── [chibiAssets.js](./07-nguon-code/demo-giao-dien/src/constants/chibiAssets.js) (Ánh xạ 45 tài nguyên Chibi)
+            │   ├── [chibiAssets.js](./07-nguon-code/demo-giao-dien/src/constants/chibiAssets.js) (Ánh xạ 45 tài nguyên Chibi)
+            │   └── [guideConfig.js](./07-nguon-code/demo-giao-dien/src/constants/guideConfig.js) (Khung Hướng dẫn sử dụng dài hạn - chờ chốt tính năng)
             ├── 📂 context/
             │   └── [ProjectContext.jsx](./07-nguon-code/demo-giao-dien/src/context/ProjectContext.jsx) (State toàn cục, Multi-project, RBAC & Actions)
             ├── 📂 services/
-            │   └── [apiService.js](./07-nguon-code/demo-giao-dien/src/services/apiService.js) (21 hàm giao tiếp REST API)
+            │   └── [apiService.js](./07-nguon-code/demo-giao-dien/src/services/apiService.js) (26 hàm giao tiếp REST API & GitHub)
             ├── 📂 db/
             │   ├── [schema.sql](./07-nguon-code/demo-giao-dien/src/db/schema.sql) (DDL 9 bảng SQLite)
-            │   └── [initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js) (Khởi tạo & Seed Lớp học phần, Đề tài Cá nhân/Nhóm)
+            │   └── [initDb.js](./07-nguon-code/demo-giao-dien/src/db/initDb.js) (Khởi tạo & Seed Lớp học phần, Đề tài & GitHub Demo)
             ├── 📂 data/
             │   └── [databaseMock.js](./07-nguon-code/demo-giao-dien/src/data/databaseMock.js) (Dữ liệu mẫu đối chiếu)
             ├── 📂 utils/
@@ -393,10 +415,10 @@ flowchart TB
             ├── 📂 styles/
             │   ├── [tokens.css](./07-nguon-code/demo-giao-dien/src/styles/tokens.css)
             │   └── [app.css](./07-nguon-code/demo-giao-dien/src/styles/app.css)
-            └── 📂 components/ (15 Giao diện thành phần)
+            └── 📂 components/ (16 Giao diện thành phần)
                 ├── [LoginScreen.jsx](./07-nguon-code/demo-giao-dien/src/components/LoginScreen.jsx) (Đăng nhập `@gmail.com` & chọn nhanh vai trò)
                 ├── [BannerRoleBar.jsx](./07-nguon-code/demo-giao-dien/src/components/BannerRoleBar.jsx)
-                ├── [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx) (Cổng Môn học GVPTMH & Sinh viên)
+                ├── [ClassroomPortalView.jsx](./07-nguon-code/demo-giao-dien/src/components/ClassroomPortalView.jsx) (Cổng Môn học Tinh giản GVPTMH & Sinh viên + Modal Chi tiết)
                 ├── [Sidebar.jsx](./07-nguon-code/demo-giao-dien/src/components/Sidebar.jsx)
                 ├── [Header.jsx](./07-nguon-code/demo-giao-dien/src/components/Header.jsx)
                 ├── [TopicsBankView.jsx](./07-nguon-code/demo-giao-dien/src/components/TopicsBankView.jsx)
@@ -408,5 +430,6 @@ flowchart TB
                 ├── [TeamView.jsx](./07-nguon-code/demo-giao-dien/src/components/TeamView.jsx)
                 ├── [NotificationCenter.jsx](./07-nguon-code/demo-giao-dien/src/components/NotificationCenter.jsx)
                 ├── [TaskDrawer.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskDrawer.jsx)
-                └── [TaskModal.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskModal.jsx)
+                ├── [TaskModal.jsx](./07-nguon-code/demo-giao-dien/src/components/TaskModal.jsx)
+                └── [GitHubDashboardView.jsx](./07-nguon-code/demo-giao-dien/src/components/GitHubDashboardView.jsx) (Dashboard GitHub Tiến độ, Commits, PRs, Branches & Mapping)
 ```

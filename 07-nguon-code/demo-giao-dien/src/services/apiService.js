@@ -112,5 +112,22 @@ export const apiService = {
   }),
 
   getTeam: (projectId = 'da-dacs-01') => request(`/team?projectId=${encodeURIComponent(projectId)}`),
-  getNotifications: (userId) => request(`/notifications?userId=${encodeURIComponent(userId)}`)
+  getNotifications: (userId) => request(`/notifications?userId=${encodeURIComponent(userId)}`),
+
+  // GitHub Dashboard Integration APIs
+  getGithubDashboard: (projectId = 'da-dacs-01') => request(`/github/dashboard?projectId=${encodeURIComponent(projectId)}`),
+  connectGithub: (data) => request('/github/connect', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  }),
+  syncGithub: (projectId = 'da-dacs-01') => request(`/github/sync?projectId=${encodeURIComponent(projectId)}`, {
+    method: 'POST'
+  }),
+  saveGithubMapping: (projectId, mapping) => request('/github/mapping', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, mapping })
+  }),
+  disconnectGithub: (projectId) => request(`/github/connect?projectId=${encodeURIComponent(projectId)}`, {
+    method: 'DELETE'
+  })
 };

@@ -262,6 +262,40 @@ function ensureClassroomTopicsSeeded() {
     'u-gv-01',
     'Lớp học phần bổ trợ phân công thực hành đồ án'
   );
+
+  // Bảng bổ trợ Kết nối GitHub Dashboard (giữ nguyên 9 bảng lõi chuẩn BCNF)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lien_ket_github (
+      ma_lien_ket          TEXT PRIMARY KEY,
+      ma_do_an             TEXT NOT NULL UNIQUE REFERENCES do_an(ma_do_an) ON DELETE CASCADE,
+      repo_url             TEXT NOT NULL,
+      repo_owner           TEXT NOT NULL,
+      repo_name            TEXT NOT NULL,
+      default_branch       TEXT DEFAULT 'master',
+      access_token         TEXT,
+      member_mapping_json  TEXT DEFAULT '{}',
+      cached_payload_json  TEXT,
+      last_synced_at       TEXT
+    );
+  `);
+
+  // Seed sẵn liên kết GitHub mẫu cho đề tài da-dacs-01 (Nhóm 05) để demo ngay
+  db.prepare(`
+    INSERT OR IGNORE INTO lien_ket_github (
+      ma_lien_ket, ma_do_an, repo_url, repo_owner, repo_name, default_branch, member_mapping_json
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+  `).run(
+    'gh-dacs-01',
+    'da-dacs-01',
+    'https://github.com/TDMHorizon/HeThongQuanLyCongViecVaTienDoDoAnNhom',
+    'TDMHorizon',
+    'HeThongQuanLyCongViecVaTienDoDoAnNhom',
+    'master',
+    JSON.stringify({
+      'u-sv-01': 'TDMHorizon',
+      'u-sv-02': 'Sixduy'
+    })
+  );
 }
 
 ensureClassroomTopicsSeeded();
